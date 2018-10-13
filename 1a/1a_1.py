@@ -61,6 +61,7 @@ biases  = tf.Variable(tf.zeros([NUM_CLASSES]), name='biases')
 h = tf.nn.relu(tf.matmul(x, weights_h) + biases_h)
 logits = tf.matmul(h, weights) + biases
 
+
 ridge_loss = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_, logits=logits)
 ridge_param = tf.constant(0.000001)
 regularization = tf.nn.l2_loss(weights) + tf.nn.l2_loss(weights_h)
