@@ -16,13 +16,14 @@ NUM_CLASSES = 6
 
 learning_rate = 0.01
 epochs = 1000
+# Limit search space to 𝑆 = {4, 8, 16, 32, 64}. 
 batch_sizes = [2**i for i in range(2, 7)]
 num_neurons = 10
 seed = 10
 np.random.seed(seed)
 
 #read train data
-train_input = np.loadtxt('sat_train.txt',delimiter=' ')
+train_input = np.loadtxt('../provided files/sat_train.txt',delimiter=' ')
 trainX, train_Y = train_input[:,:36], train_input[:,-1].astype(int)
 trainX = scale(trainX, np.min(trainX, axis=0), np.max(trainX, axis=0))
 train_Y[train_Y == 7] = 6
@@ -31,7 +32,7 @@ trainY = np.zeros((train_Y.shape[0], NUM_CLASSES))
 trainY[np.arange(train_Y.shape[0]), train_Y-1] = 1 #one hot matrix
 
 #read test data
-test_input = np.loadtxt('sat_test.txt',delimiter=' ')
+test_input = np.loadtxt('../provided files/sat_test.txt',delimiter=' ')
 testX, test_Y = test_input[:,:36], test_input[:,-1].astype(int)
 testX = scale(testX, np.min(testX, axis=0), np.max(testX, axis=0))
 test_Y[test_Y == 7] = 6
@@ -57,7 +58,7 @@ y_ = tf.placeholder(tf.float32, [None, NUM_CLASSES])
 
 # Build the graph for the deep net
 
-weights_h = tf.Variable(tf.truncated_normal([NUM_FEATURES,num_neurons], stddev=0.001)) 
+weights_h = tf.Variable(tf.truncated_normal([NUM_FEATURES,num_neurons], stddev=0.001))
 biases_h = tf.Variable(tf.zeros([num_neurons]))
 
 weights = tf.Variable(tf.truncated_normal([num_neurons, NUM_CLASSES], stddev=1.0/math.sqrt(float(NUM_FEATURES))), name='weights')
@@ -95,7 +96,7 @@ for batch_size in batch_sizes:
                 print('iter %d: training accuracy %g'%(i, train_acc[i]))
         print('final test accuracy %g'%test_acc[-1])
         sess.close()
-        
+
     all_train_accs.append(train_acc)
     all_test_accs.append(test_acc)
 
@@ -113,4 +114,3 @@ for i in batch_sizes:
 plt.legend(legend)
 plt.ylabel('Accuracy')
 plt.show()
-
