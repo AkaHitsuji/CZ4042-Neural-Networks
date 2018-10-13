@@ -11,7 +11,9 @@ import pylab as plt
 def scale(X, X_min, X_max):
     return (X - X_min)/(X_max-X_min)
 
+# input attributes of 4 spectral bands x 9 pixels in each neighbourhood
 NUM_FEATURES = 36
+# 6 class labels
 NUM_CLASSES = 6
 
 learning_rate = 0.01
@@ -42,14 +44,20 @@ n = trainX.shape[0]
 x = tf.placeholder(tf.float32, [None, NUM_FEATURES])
 y_ = tf.placeholder(tf.float32, [None, NUM_CLASSES])
 
-# Build the graph for the deep net
 
+# Build the graph for the deep net
+# input layer has NUM_FEATURES nodes, hidden layer has num_neurons nodes, output softmax layer has NUM_CLASSES nodes
+# first set of variables for weights and bias btwn input layer and hidden layer
 weights_h = tf.Variable(tf.truncated_normal([NUM_FEATURES,num_neurons], stddev=0.001))
 biases_h = tf.Variable(tf.zeros([num_neurons]))
 
+# 2nd set of variables for weights and bias btwn hidden layer and output layer
 weights = tf.Variable(tf.truncated_normal([num_neurons, NUM_CLASSES], stddev=1.0/math.sqrt(float(NUM_FEATURES))), name='weights')
 biases  = tf.Variable(tf.zeros([NUM_CLASSES]), name='biases')
 
+# creating the neural net graph
+# tf.matmul links 2 tensors to create a matrix multiplication tensor.
+# logits are the vector of raw (non-normalized) predictions that a classification model generates, which is passed to a normalization function, in this case the softmax function
 h = tf.nn.relu(tf.matmul(x, weights_h) + biases_h)
 logits = tf.matmul(h, weights) + biases
 
@@ -65,6 +73,7 @@ train_op = optimizer.minimize(loss)
 correct_prediction = tf.cast(tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1)), tf.float32)
 accuracy = tf.reduce_mean(correct_prediction)
 
+# input and output layers are fed to the tf.placeholder tensors and weights are represented as tf.Variable as their value changes for each iteration
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
     train_acc = []
@@ -82,3 +91,8 @@ plt.plot(range(epochs), train_acc)
 plt.xlabel(str(epochs) + ' iterations')
 plt.ylabel('Train accuracy')
 plt.show()
+
+# questions:
+# - how is epoch determined?
+# - what is seed?
+# - why use tf.nn.relu for first layer
