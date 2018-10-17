@@ -18,7 +18,7 @@ seed = 10
 np.random.seed(seed)
 num_folds = 5
 
-#read and divide data into test and train sets 
+#read and divide data into test and train sets
 cal_housing = np.loadtxt('cal_housing.data', delimiter=',')
 X_data, Y_data = cal_housing[:,:8], cal_housing[:,-1]
 Y_data = (np.asmatrix(Y_data)).transpose()
@@ -44,7 +44,7 @@ y_ = tf.placeholder(tf.float32, [None, 1])
 overall_error = []
 for num_neuron in num_neurons:
 	# Build the graph for the deep net
-	weights_h = tf.Variable(tf.truncated_normal([NUM_FEATURES,num_neuron], stddev=0.001)) 
+	weights_h = tf.Variable(tf.truncated_normal([NUM_FEATURES,num_neuron], stddev=0.001))
 	biases_h = tf.Variable(tf.zeros([num_neuron]))
 	h = tf.nn.relu(tf.matmul(x, weights_h) + biases_h)
 
@@ -67,6 +67,7 @@ for num_neuron in num_neurons:
 		mean_errors = []
 		for i in range(epochs):
 			test_errors = []
+			# CHANGE THIS CHANGE CHANGE CHANGE
 			for fold in range(num_folds):
 				start, end = nf*fold, (fold+1)*nf
 				testX = trainX[start:end]
@@ -79,7 +80,7 @@ for num_neuron in num_neurons:
 				test_errors.append(error.eval(feed_dict={x:testX, y_:testY}))
 			if i % 100 == 0:
 				print('finished training iter %d'%i)
-			mean_errors.append(np.mean(test_errors))	
+			mean_errors.append(np.mean(test_errors))
 	overall_error.append(mean_errors[-1])
 # plot learning curves
 fig = plt.figure(1)

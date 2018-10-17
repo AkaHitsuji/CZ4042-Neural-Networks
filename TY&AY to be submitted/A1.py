@@ -82,7 +82,7 @@ with tf.Session() as sess:
         
         for starting_idex in range(0, n-batch_size, batch_size):
             train_op.run(feed_dict={x: trainX[starting_idex:starting_idex+batch_size], y_: trainY[starting_idex:starting_idex+batch_size]})
-        
+
         train_acc.append(accuracy.eval(feed_dict={x: trainX, y_: trainY}))
 
         if i % 100 == 0:
@@ -96,4 +96,3 @@ plt.plot(range(epochs), train_acc)
 plt.xlabel(str(epochs) + ' iterations')
 plt.ylabel('Train accuracy')
 plt.show()
-
