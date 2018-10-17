@@ -83,6 +83,7 @@ with tf.Session() as sess:
 
         if i % 100 == 0:
             print('iter %d: accuracy %g'%(i, train_acc[i]))
+    sess.close()
 
 
 # plot learning curves
