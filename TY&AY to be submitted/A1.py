@@ -39,8 +39,8 @@ trainY[np.arange(train_Y.shape[0]), train_Y-1] = 1 #one hot matrix
 
 
 # experiment with small datasets
-trainX = trainX[:1000]
-trainY = trainY[:1000]
+# trainX = trainX[:1000]
+# trainY = trainY[:1000]
 
 n = trainX.shape[0] #n=1000,number of datasets
 
@@ -83,6 +83,7 @@ with tf.Session() as sess:
 
         if i % 100 == 0:
             print('iter %d: accuracy %g'%(i, train_acc[i]))
+    sess.close()
 
 
 # plot learning curves
