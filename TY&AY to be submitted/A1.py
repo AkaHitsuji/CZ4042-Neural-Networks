@@ -76,6 +76,10 @@ with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
     train_acc = []
     for i in range(epochs):
+        rand_array = np.random.shuffle(np.arange(n))
+        trainX = trainX[rand_array]
+        trainY = trainY[rand_array]
+        
         for starting_idex in range(0, n-batch_size, batch_size):
             train_op.run(feed_dict={x: trainX[starting_idex:starting_idex+batch_size], y_: trainY[starting_idex:starting_idex+batch_size]})
         
