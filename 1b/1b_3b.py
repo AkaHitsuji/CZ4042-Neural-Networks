@@ -18,7 +18,7 @@ seed = 10
 np.random.seed(seed)
 
 #read and divide data into test and train sets 
-cal_housing = np.loadtxt('cal_housing.data', delimiter=',')
+cal_housing = np.loadtxt('../provided files/cal_housing.data', delimiter=',')
 X_data, Y_data = cal_housing[:,:8], cal_housing[:,-1]
 Y_data = (np.asmatrix(Y_data)).transpose()
 

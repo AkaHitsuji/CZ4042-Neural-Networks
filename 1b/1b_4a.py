@@ -19,7 +19,7 @@ validation_split = 0.7
 dropout = 0.9
 
 #read and divide data into test and train sets 
-cal_housing = np.loadtxt('cal_housing.data', delimiter=',')
+cal_housing = np.loadtxt('../provided files/cal_housing.data', delimiter=',')
 X_data, Y_data = cal_housing[:,:8], cal_housing[:,-1]
 Y_data = (np.asmatrix(Y_data)).transpose()
 
@@ -33,8 +33,8 @@ trainX, trainY = X_data[m:], Y_data[m:]
 trainX = (trainX- np.mean(trainX, axis=0))/ np.std(trainX, axis=0)
 
 # create validation and test sets randomly
-trainX = trainX[:5000]
-trainY = trainY[:5000]
+trainX = trainX[:1000]
+trainY = trainY[:1000]
 n = trainX.shape[0]
 test_size = (1-validation_split)*n
 random = np.random.randint(0, test_size)
@@ -95,11 +95,13 @@ with tf.Session() as sess:
 		test_err = error.eval(feed_dict={x: testX, y_:testY})
 		test_errs.append(test_err)
 		print("training iteration %d" %i, end="\r")
-
+		if i % 100 == 0:
+			print('iter %d: validation error %g'%(i, test_errs[i]))
 # plot learning curves
 fig = plt.figure(1)
 plt.title("5 layers With Dropout")
 plt.xlabel('number of iterations')
 plt.ylabel('Test Error (LOG)')
-plt.plot(range(epochs), np.log10(test_errs))
+plt.yscale('log')
+plt.plot(range(epochs), test_errs)
 plt.show()
