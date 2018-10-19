@@ -42,9 +42,9 @@ trainX, trainY = X_data[test_size:], Y_data[test_size:]
 testX, testY = X_data[:test_size], Y_data[:test_size]
 
 # experiment with small datasets
-trainX = trainX[:1000]
-trainY = trainY[:1000]
-train_size = trainX.shape[0]
+# trainX = trainX[:1000]
+# trainY = trainY[:1000]
+# train_size = trainX.shape[0]
 
 #take 50 samples
 rand = np.random.randint(0, test_size-50)

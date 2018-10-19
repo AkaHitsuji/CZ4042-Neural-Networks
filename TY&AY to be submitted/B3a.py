@@ -44,9 +44,9 @@ train_X, train_Y = X_data[test_size:], Y_data[test_size:]
 testX, testY = X_data[:test_size], Y_data[:test_size]
 
 # experiment with small datasets
-train_X = train_X[:1000]
-train_Y = train_Y[:1000]
-train_size = train_X.shape[0]
+# train_X = train_X[:1000]
+# train_Y = train_Y[:1000]
+# train_size = train_X.shape[0]
 
 # Create the model
 x = tf.placeholder(tf.float32, [None, NUM_FEATURES])
@@ -106,6 +106,6 @@ fig = plt.figure(1)
 plt.xlabel('Learning Rates')
 plt.xscale("log")
 plt.ylabel('Test Data Error')
-plt.plot(learning_rate, errors)
+plt.plot(learning_rate, errs)
 plt.savefig('./figures/B3_Fig1.png')
 plt.show()

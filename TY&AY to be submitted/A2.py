@@ -49,8 +49,8 @@ testY[np.arange(test_Y.shape[0]), test_Y-1] = 1 #one hot matrix
 
 
 # experiment with small datasets
-trainX = trainX[:1000]
-trainY = trainY[:1000]
+# trainX = trainX[:1000]
+# trainY = trainY[:1000]
 # testX = testX[:200]
 # testY = testY[:200]
 
