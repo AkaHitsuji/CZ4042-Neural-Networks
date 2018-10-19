@@ -31,8 +31,8 @@ np.random.seed(seed)
 
 #read train data
 train_input = np.loadtxt('sat_train.txt',delimiter=' ')
-trainX, train_Y = train_input[:,:36], train_input[:,-1].astype(int)
-trainX = scale(trainX, np.min(trainX, axis=0), np.max(trainX, axis=0))
+train_X, train_Y = train_input[:,:36], train_input[:,-1].astype(int)
+trainX = scale(train_X, np.min(train_X, axis=0), np.max(train_X, axis=0))
 train_Y[train_Y == 7] = 6 #changes all 7s to 6
 
 trainY = np.zeros((train_Y.shape[0], NUM_CLASSES))
@@ -40,8 +40,8 @@ trainY[np.arange(train_Y.shape[0]), train_Y-1] = 1 #one hot matrix
 
 #read test data
 test_input = np.loadtxt('sat_test.txt',delimiter=' ')
-testX, test_Y = test_input[:,:36], test_input[:,-1].astype(int)
-testX = scale(testX, np.min(testX, axis=0), np.max(testX, axis=0))
+test_X, test_Y = test_input[:,:36], test_input[:,-1].astype(int)
+testX = scale(test_X, np.min(train_X, axis=0), np.max(train_X, axis=0))
 test_Y[test_Y == 7] = 6
 
 testY = np.zeros((test_Y.shape[0], NUM_CLASSES))
@@ -49,10 +49,10 @@ testY[np.arange(test_Y.shape[0]), test_Y-1] = 1 #one hot matrix
 
 
 # experiment with small datasets
-# trainX = trainX[:100]
-# trainY = trainY[:100]
-# testX = testX[:20]
-# testY = testY[:20]
+trainX = trainX[:1000]
+trainY = trainY[:1000]
+# testX = testX[:200]
+# testY = testY[:200]
 
 
 n = trainX.shape[0] #n=1000,number of datasets
@@ -84,7 +84,6 @@ train_op = optimizer.minimize(loss)
 
 correct_prediction = tf.cast(tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1)), tf.float32)
 accuracy = tf.reduce_mean(correct_prediction)
-err = tf.reduce_sum(tf.cast(tf.not_equal(tf.argmax(logits, 1), tf.argmax(y_, 1)), tf.int32))
 
 # final_train_acc = []
 final_test_acc = []
@@ -98,10 +97,14 @@ for batch_size in batch_sizes:
         train_err = []
         test_acc = []
         for i in range(epochs):
+            rand_array = np.arange(n)
+            np.random.shuffle(rand_array)
+            trainX = trainX[rand_array]
+            trainY = trainY[rand_array]
             for starting_idex in range(0, n-batch_size, batch_size):
                 train_op.run(feed_dict={x: trainX[starting_idex:starting_idex+batch_size], y_: trainY[starting_idex:starting_idex+batch_size]})
             
-            train_err.append(err.eval(feed_dict={x: trainX, y_: trainY}))
+            train_err.append(loss.eval(feed_dict={x: trainX, y_: trainY}))
             test_acc.append(accuracy.eval(feed_dict={x: testX, y_: testY}))
 
             if i % 100 == 0:
@@ -123,7 +126,8 @@ legend = []
 for i in batch_sizes:
     legend.append("Batch Size " + str(i))
 plt.legend(legend)
-plt.ylabel('Accuracy')
+plt.ylabel('Test Data Accuracy')
+plt.savefig('./figures/A2_Fig1.png')
 
 plt.figure(2)
 for train_err in final_train_err:
@@ -133,12 +137,14 @@ legend = []
 for i in batch_sizes:
     legend.append("Batch Size " + str(i))
 plt.legend(legend)
-plt.ylabel('Classification errors')
+plt.ylabel('Training Data Error')
+plt.savefig('./figures/A2_Fig2.png')
 
 plt.figure(3)
 plt.plot(batch_sizes, time_taken)
 plt.xlabel('Batch Size')
-plt.ylabel('Time Taken')
+plt.ylabel('Time Taken in seconds')
+plt.savefig('./figures/A2_Fig3.png')
 
 plt.show()
 

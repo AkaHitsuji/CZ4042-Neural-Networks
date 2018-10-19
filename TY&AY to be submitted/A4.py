@@ -20,7 +20,7 @@ def scale(X, X_min, X_max):
 
 NUM_FEATURES = 36
 NUM_CLASSES = 6
-num_neurons = [5,10,15,20,25]
+num_neurons = 25
 
 learning_rate = 0.01
 epochs = 1000
@@ -70,29 +70,32 @@ y_ = tf.placeholder(tf.float32, [None, NUM_CLASSES])
 final_test_acc = []
 final_train_err = []
 time_taken = []
-for neuron_num in num_neurons:
-    V = init_weights(NUM_FEATURES,neuron_num)
-    c = init_bias(neuron_num)
-    W = init_weights(neuron_num, NUM_CLASSES)
-    b = init_bias(NUM_CLASSES)
 
-    h = tf.nn.sigmoid(tf.matmul(x, V) + c)
-    logits  = tf.matmul(h, W) + b
+V = init_weights(NUM_FEATURES,num_neurons)
+c = init_bias(num_neurons)
+W = init_weights(num_neurons, NUM_CLASSES)
+b = init_bias(NUM_CLASSES)
 
-    cross_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_, logits=logits)
-    beta = tf.constant(0.000001)
-    L2_regularization = tf.nn.l2_loss(V) + tf.nn.l2_loss(W)
-    loss = tf.reduce_mean(cross_entropy + beta*L2_regularization)
+h = tf.nn.sigmoid(tf.matmul(x, V) + c)
+logits  = tf.matmul(h, W) + b
 
-    # Create the gradient descent optimizer with the given learning rate.
+cross_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_, logits=logits)
+beta = [10**-3,10**-6,10**-9,10**-12,0]
+L2_regularization = tf.nn.l2_loss(V) + tf.nn.l2_loss(W)
+
+# Create the gradient descent optimizer with the given learning rate.
+
+
+correct_prediction = tf.cast(tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1)), tf.float32)
+accuracy = tf.reduce_mean(correct_prediction)
+
+for current_beta in beta:
+    loss = tf.reduce_mean(cross_entropy + current_beta*L2_regularization)
     optimizer = tf.train.GradientDescentOptimizer(learning_rate)
     train_op = optimizer.minimize(loss)
 
-    correct_prediction = tf.cast(tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1)), tf.float32)
-    accuracy = tf.reduce_mean(correct_prediction)
-
     start_time = time.time()
-    print('running with Neuron Number: %d'%neuron_num)
+    print('running with beta: %d'%current_beta)
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         train_err = []
@@ -115,38 +118,29 @@ for neuron_num in num_neurons:
         sess.close()
 
     final_train_err.append(train_err)
-    final_test_acc.append(test_acc)
+    final_test_acc.append(test_acc[-1])
     time_taken.append(time.time() - start_time)
     print('Time taken: %g'%time_taken[-1])
 
 # plot learning curves
-plt.figure(1)
-for test_acc in final_test_acc:
-    plt.plot(range(epochs), test_acc)
-plt.xlabel('Number of iterations')
-legend = []
-for i in num_neurons:
-    legend.append(str(i) + " Neurons")
-plt.legend(legend)
-plt.ylabel('Test Data Accuracy')
-plt.savefig('./figures/A3_Fig1.png')
 
-plt.figure(2)
+plt.figure(1)
 for train_err in final_train_err:
     plt.plot(range(epochs), train_err)
 plt.xlabel('Number of iterations')
 legend = []
-for i in num_neurons:
-    legend.append(str(i) + " Neurons")
+for i in beta:
+    legend.append("Beta: "+str(i))
 plt.legend(legend)
 plt.ylabel('Training Data Error')
-plt.savefig('./figures/A3_Fig2.png')
+plt.savefig('./figures/A4_Fig1.png')
 
-plt.figure(3)
-plt.plot(num_neurons, time_taken)
-plt.xlabel("Neuron Number")
-plt.ylabel('Time Taken in seconds')
-plt.savefig('./figures/A3_Fig3.png')
+plt.figure(2)
+plt.plot(beta,final_test_acc)
+plt.xlabel("Beta")
+plt.xscale("log")
+plt.ylabel('Test Data Accuracy')
+plt.savefig('./figures/A4_Fig2.png')
 
 plt.show()
 

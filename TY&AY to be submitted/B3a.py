@@ -19,11 +19,11 @@ def scale(X):
 
 
 NUM_FEATURES = 8
-learning_rates = [0.5*(10**-6), 10**-7, 0.5*(10**-8), 10**-9, 10**-10]
+learning_rate = 0.5*(10**-6)
 beta = 10**-3
 epochs = 1000
 batch_size = 32
-num_neurons = 30
+num_neurons = [20,40,60,80,100]
 seed = 10
 np.random.seed(seed)
 num_folds = 5
@@ -44,34 +44,36 @@ train_X, train_Y = X_data[test_size:], Y_data[test_size:]
 testX, testY = X_data[:test_size], Y_data[:test_size]
 
 # experiment with small datasets
-# train_X = train_X[:1000]
-# train_Y = train_Y[:1000]
-# train_size = train_X.shape[0]
+train_X = train_X[:1000]
+train_Y = train_Y[:1000]
+train_size = train_X.shape[0]
 
 # Create the model
 x = tf.placeholder(tf.float32, [None, NUM_FEATURES])
 y_ = tf.placeholder(tf.float32, [None, 1])
 
 # Build the graph for the deep net
-V = init_weights(NUM_FEATURES, num_neurons)
-c = init_bias(num_neurons)
-W = init_weights(num_neurons)
-b = init_bias()
-h = tf.nn.relu(tf.matmul(x, V) + c)
-y = tf.matmul(h, W) + b
 
-square_error = tf.square(y_ - y)
-regularization = tf.nn.l2_loss(V) + tf.nn.l2_loss(W)
-loss = tf.reduce_mean(square_error + beta *regularization)
-error = tf.reduce_mean(tf.square(y_ - y))
 
 errors = []
 sizeof_fold = train_size//num_folds
-for learning_rate in learning_rates:
-	print('Starting training for learning rate: %d'%learning_rate)
+for number in num_neurons:
+	print('Starting training for number of neurons: %d'%number)
 	#Create the gradient descent optimizer with the given learning rate.
+	V = init_weights(NUM_FEATURES, number)
+	c = init_bias(number)
+	W = init_weights(number)
+	b = init_bias()
+	h = tf.nn.relu(tf.matmul(x, V) + c)
+	y = tf.matmul(h, W) + b
+
+	square_error = tf.square(y_ - y)
+	regularization = tf.nn.l2_loss(V) + tf.nn.l2_loss(W)
+	loss = tf.reduce_mean(square_error + beta *regularization)
+
 	optimizer = tf.train.GradientDescentOptimizer(learning_rate)
 	train_op = optimizer.minimize(loss)
+	error = tf.reduce_mean(tf.square(y_ - y))
 
 	errs=[]
 	for fold in range(num_folds):
@@ -104,6 +106,6 @@ fig = plt.figure(1)
 plt.xlabel('Learning Rates')
 plt.xscale("log")
 plt.ylabel('Test Data Error')
-plt.plot(learning_rates, errors)
-plt.savefig('./figures/B2_Fig2.png')
+plt.plot(learning_rate, errors)
+plt.savefig('./figures/B3_Fig1.png')
 plt.show()

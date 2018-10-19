@@ -38,9 +38,17 @@ trainY = np.zeros((train_Y.shape[0], NUM_CLASSES))
 trainY[np.arange(train_Y.shape[0]), train_Y-1] = 1 #one hot matrix
 
 
-# # experiment with small datasets
-trainX = trainX[:1000]
-trainY = trainY[:1000]
+#get test data
+test_input = np.loadtxt('sat_test.txt',delimiter=' ')
+test_X, test_Y = test_input[:,:36], test_input[:,-1].astype(int)
+testX = scale(test_X, np.min(train_X, axis=0), np.max(train_X, axis=0))
+test_Y[test_Y == 7] = 6
+
+testY = np.zeros((test_Y.shape[0], NUM_CLASSES))
+testY[np.arange(test_Y.shape[0]), test_Y-1] = 1 #one hot matrix
+# experiment with small datasets
+# trainX = trainX[:1000]
+# trainY = trainY[:1000]
 
 n = trainX.shape[0] #n=1000,number of datasets
 
@@ -61,7 +69,7 @@ h = tf.nn.sigmoid(tf.matmul(x, V) + c)
 logits  = tf.matmul(h, W) + b
 
 cross_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_, logits=logits)
-beta = tf.constant(0.000001)
+beta = tf.constant(10**-6)
 L2_regularization = tf.nn.l2_loss(V) + tf.nn.l2_loss(W)
 loss = tf.reduce_mean(cross_entropy + beta*L2_regularization)
 
@@ -75,6 +83,7 @@ accuracy = tf.reduce_mean(correct_prediction)
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
     train_acc = []
+    test_acc = []
     for i in range(epochs):
         rand_array = np.arange(n)
         np.random.shuffle(rand_array)
@@ -85,16 +94,24 @@ with tf.Session() as sess:
             train_op.run(feed_dict={x: trainX[starting_idex:starting_idex+batch_size], y_: trainY[starting_idex:starting_idex+batch_size]})
 
         train_acc.append(accuracy.eval(feed_dict={x: trainX, y_: trainY}))
+        test_acc.append(accuracy.eval(feed_dict={x: testX, y_: testY}))
 
         if i % 100 == 0:
             print('iter %d: accuracy %g'%(i, train_acc[i]))
+    print('final test accuracy %g'%test_acc[-1])
+    print('final train error %g'%train_acc[-1])
     sess.close()
 
 
 # plot learning curves
 plt.figure(1)
 plt.plot(range(epochs), train_acc)
+legend = []
+legend.append("Training Accuracy 3 Layer")
+plt.plot(range(epochs), test_acc)
+legend.append("Test Accuracy 3 Layer")
 plt.xlabel('Number of iterations')
-plt.ylabel('Training data accuracy')
-plt.savefig('./figures/A1_Fig1.png')
+plt.ylabel('Accuracy')
+plt.legend(legend)
+plt.savefig('A5_accuracy.png')
 plt.show()
