@@ -14,7 +14,7 @@ NUM_CLASSES = 10
 IMG_SIZE = 32
 NUM_CHANNELS = 3
 learning_rate = 0.001
-epochs = 1000
+epochs = 2
 batch_size = 128
 
 
@@ -156,13 +156,18 @@ def main():
 
     plt.show()
 
-
-    pylab.figure(2)
-    pylab.gray()
+    print(c1)
+    print(c2)
+    print(p1)
+    print(p2)
+    plt.figure(3)
+    plt.gray()
     c2 = np.array(c2)
     for i in range(50):
-        pylab.subplot(10, 10, i+1); pylab.axis('off'); pylab.imshow(c1[0,:,:,i])
-    pylab.savefig('./c1.png')
+        plt.subplot(10, 10, i+1); plt.axis('off'); pylab.imshow(c1[0,:,:,i])
+    plt.savefig('./c1.png')
+
+    plt.show()
 
 
 if __name__ == '__main__':
