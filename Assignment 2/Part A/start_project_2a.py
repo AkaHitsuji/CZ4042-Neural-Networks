@@ -164,7 +164,7 @@ def main():
     plt.gray()
     c2 = np.array(c2)
     for i in range(50):
-        plt.subplot(10, 10, i+1); plt.axis('off'); pylab.imshow(c1[0,:,:,i])
+        plt.subplot(10, 10, i+1); plt.axis('off'); plt.imshow(c1[0,:,:,i])
     plt.savefig('./c1.png')
 
     plt.show()
