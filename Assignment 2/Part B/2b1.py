@@ -117,8 +117,8 @@ def main():
   correct_prediction = tf.cast(tf.equal(tf.argmax(logits, 1), y_), tf.float32)
   accuracy = tf.reduce_mean(correct_prediction)
 
-  sess = tf.Session()
-  sess.run(tf.global_variables_initializer())
+  # sess = tf.Session()
+  # sess.run(tf.global_variables_initializer())
 
   # training
   loss = []
@@ -127,18 +127,20 @@ def main():
   # shuffle data
   N = len(x_train)
   index = np.arange(N)
-  for e in range(no_epochs):
-      np.random.shuffle(index)
-      x_train, y_train = x_train[index], y_train[index]
+  with tf.Session() as sess:
+    sess.run(tf.global_variables_initializer())
+    for e in range(no_epochs):
+        np.random.shuffle(index)
+        x_train, y_train = x_train[index], y_train[index]
 
-      _, loss_  = sess.run([train_op, entropy], {x: x_train, y_: y_train})
-      test_acc_ = accuracy.eval(feed_dict={x:x_test, y_: y_test})
+        _, loss_  = sess.run([train_op, entropy], {x: x_train, y_: y_train})
+        test_acc_ = accuracy.eval(feed_dict={x:x_test, y_: y_test})
 
-      loss.append(loss_)
-      test_accuracy.append(test_acc_)
+        loss.append(loss_)
+        test_accuracy.append(test_acc_)
 
-      if e%1 == 0:
-          print('iter: %d, entropy: %g, test_accuracy:%g'%(e, loss[e],test_accuracy[e]))
+        if e%1 == 0:
+            print('iter: %d, entropy: %g, test_accuracy:%g'%(e, loss[e],test_accuracy[e]))
 
   sess.close()
 
