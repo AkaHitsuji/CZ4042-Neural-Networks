@@ -5,14 +5,10 @@ import csv
 import matplotlib.pyplot as plt
 from datetime import datetime
 
-is_testing = False
+is_testing = True
 
 MAX_DOCUMENT_LENGTH = 100
-N_FILTERS = 10
-FILTER_SHAPE1 = [20, 256]
-FILTER_SHAPE2 = [20, 1]
-POOLING_WINDOW = 4
-POOLING_STRIDE = 2
+HIDDEN_SIZE = 20
 MAX_LABEL = 15
 
 if is_testing:
@@ -27,42 +23,18 @@ tf.logging.set_verbosity(tf.logging.ERROR)
 seed = 10
 tf.set_random_seed(seed)
 
-def char_cnn_model(x):
+def char_rnn_model(x):
 
-  input_layer = tf.reshape(
-      tf.one_hot(x, 256), [-1, MAX_DOCUMENT_LENGTH, 256, 1])
+  char_vectors = tf.one_hot(x, 256)
 
-  with tf.variable_scope('CNN_Layer1'):
-    conv1 = tf.layers.conv2d(
-        input_layer,
-        filters=N_FILTERS,
-        kernel_size=FILTER_SHAPE1,
-        padding='VALID',
-        activation=tf.nn.relu)
-    pool1 = tf.layers.max_pooling2d(
-        conv1,
-        pool_size=POOLING_WINDOW,
-        strides=POOLING_STRIDE,
-        padding='SAME')
+  char_list = tf.unstack(char_vectors, axis=1)
 
-    conv2 = tf.layers.conv2d(
-        pool1,
-        filters=N_FILTERS,
-        kernel_size=FILTER_SHAPE2,
-        padding='VALID',
-        activation=tf.nn.relu)
-    pool2 = tf.layers.max_pooling2d(
-        conv2,
-        pool_size=POOLING_WINDOW,
-        strides=POOLING_STRIDE,
-        padding='SAME')
+  cell = tf.nn.rnn_cell.GRUCell(HIDDEN_SIZE)
+  _, encoding = tf.nn.static_rnn(cell, char_list, dtype=tf.float32)
 
-    pool2 = tf.squeeze(tf.reduce_max(pool2, 1), squeeze_dims=[1])
+  logits = tf.layers.dense(encoding, MAX_LABEL, activation=None)
 
-  logits = tf.layers.dense(pool2, MAX_LABEL, activation=None)
-
-  return input_layer, logits
-
+  return logits, char_list
 
 def read_data_chars():
 
@@ -94,7 +66,6 @@ def read_data_chars():
 
   return x_train, y_train, x_test, y_test
 
-
 def main():
 
   x_train, y_train, x_test, y_test = read_data_chars()
@@ -112,7 +83,7 @@ def main():
   x = tf.placeholder(tf.int64, [None, MAX_DOCUMENT_LENGTH])
   y_ = tf.placeholder(tf.int64)
 
-  inputs, logits = char_cnn_model(x)
+  logits, char_list = char_rnn_model(x)
 
   # Optimizer
   entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(labels=tf.one_hot(y_, MAX_LABEL), logits=logits))
@@ -156,7 +127,7 @@ def main():
   plt.title('Accuracy/Loss')
   plt.xlabel('Epochs')
   plt.ylabel('Accuracy/Loss')
-  filename = 'graphs/2b1-char-cnn-'+str(datetime.now())+'.png'
+  filename = 'graphs/2b3-char-rnn-'+str(datetime.now())+'.png'
   plt.savefig(filename.replace(' ','-').replace(':','.'))
   plt.close()
 

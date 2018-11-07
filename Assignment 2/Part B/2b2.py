@@ -20,7 +20,7 @@ EMBEDDING_SIZE = 20
 if is_testing:
     no_epochs = 5
 else:
-    no_epochs = 100
+    no_epochs = 1000
 
 lr = 0.01
 batch_size = 128
@@ -167,9 +167,8 @@ def main():
   plt.title('Accuracy/Loss')
   plt.xlabel('Epochs')
   plt.ylabel('Accuracy/Loss')
-
-  plt.savefig('graphs/2b2-word-cnn-'+str(datetime.now())
-+'.png')
+  filename = 'graphs/2b1-word-cnn-'+str(datetime.now())+'.png'
+  plt.savefig(filename.replace(' ','-').replace(':','.'))
   plt.close()
 
 if __name__ == '__main__':
