@@ -77,7 +77,7 @@ def cnn(images):
     b_fc2 = tf.Variable(tf.zeros([NUM_CLASSES]), name='biases_fc2')
     logits = tf.matmul(h_fc1, W_fc2) + b_fc2
 
-    return logits
+    return conv_1, pool_1, conv_2, pool_2,logits
 
 
 def main():
@@ -96,7 +96,7 @@ def main():
     x = tf.placeholder(tf.float32, [None, IMG_SIZE*IMG_SIZE*NUM_CHANNELS])
     y_ = tf.placeholder(tf.float32, [None, NUM_CLASSES])
 
-    logits = cnn(x)
+    c1,p1,c2,p2,logits = cnn(x)
 
     cross_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_, logits=logits)
     loss = tf.reduce_mean(cross_entropy)
@@ -145,6 +145,13 @@ def main():
     plt.xlabel('Number of iterations')
     plt.show()
     plt.savefig('./A1.png')
+
+    pylab.figure(2)
+    pylab.gray()
+    c2 = np.array(c2)
+    for i in range(50):
+        pylab.subplot(10, 10, i+1); pylab.axis('off'); pylab.imshow(c1[0,:,:,i])
+    pylab.savefig('./c1.png')
 
 
 if __name__ == '__main__':
