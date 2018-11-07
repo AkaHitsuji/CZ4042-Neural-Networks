@@ -14,7 +14,7 @@ NUM_CLASSES = 10
 IMG_SIZE = 32
 NUM_CHANNELS = 3
 learning_rate = 0.001
-epochs = 2
+epochs = 1000
 batch_size = 128
 
 
@@ -120,15 +120,16 @@ def main():
 
             for start, end in zip(range(0, N, batch_size), range(batch_size, N, batch_size)):
                 train_step.run(feed_dict={x: trainX[start:end], y_: trainY[start:end]})
-                training_loss.append(loss.eval(feed_dict={x: trainX, y_: trainY}))
+            
+            training_loss.append(loss.eval(feed_dict={x: trainX, y_: trainY}))
+            test_acc.append(accuracy.eval(feed_dict={x: testX, y_: testY}))
                 #_, loss_ = sess.run([train_step, loss], {x: trainX, y_: trainY})
 
-            test_acc.append(accuracy.eval(feed_dict={x: testX, y_: testY}))
-            print('epoch', e, 'entropy', training_loss[-1], 'test accuracy', test_acc[-1])
+            
+            print('epoch', e, 'entropy', training_loss[e], 'test accuracy', test_acc[e])
 
 
-    ind = np.random.randint(low=0, high=10000)
-    X = trainX[ind,:]
+
     
     # plt.figure()
     # plt.gray()
@@ -137,14 +138,24 @@ def main():
     # plt.imshow(X_show)
     # plt.savefig('./p1b_2.png')
 
+
     plt.figure(1)
-    for test_acc in final_test_acc:
-        plt.plot(range(epochs), test_acc)
-    for train_err in final_train_err:
-        plt.plot(range(epochs), train_err)
+    #for test_acc in test_acc:
+    plt.plot(range(epochs), test_acc)
+    #for train_err in training_loss:
+    plt.ylabel('Test Accuracy')
     plt.xlabel('Number of iterations')
+    plt.savefig('./A1-1.png')
+
+    plt.figure(2)
+    plt.plot(range(epochs), training_loss)
+    plt.xlabel('Number of iterations')
+    plt.ylabel('Training Loss')
+    plt.savefig('./A1-2.png')
+ 
+
     plt.show()
-    plt.savefig('./A1.png')
+
 
 
 if __name__ == '__main__':

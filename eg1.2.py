@@ -4,7 +4,7 @@
 print("importingg os")
 import os
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="1,2"
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
 
 print("device lib")
 from tensorflow.python.client import device_lib
