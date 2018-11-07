@@ -14,7 +14,7 @@ NUM_CLASSES = 10
 IMG_SIZE = 32
 NUM_CHANNELS = 3
 learning_rate = 0.001
-epochs = 10
+epochs = 2
 batch_size = 128
 
 
@@ -62,8 +62,10 @@ def cnn(images):
 
     # Fully connected layer 1 -- after 2 round of downsampling, our 32x32 image
     # is down to 60x4x4 feature maps -- maps this to 300 features
-    W_fc1 = weight_variable([4 * 4 * 60, 300])
-    b_fc1 = bias_variable([300])
+    W_fc1 = tf.Variable(tf.truncated_normal([4*4*60,300], stddev=1.0/np.sqrt(4*4*60)), name='weights_fc1')
+    b_fc1 = tf.Variable(tf.zeros([300]), name='biases_fc1')
+    # W_fc1 = weight_variable([4 * 4 * 60, 300])
+    # b_fc1 = bias_variable([300])
 
     #what does this do?
     dim = pool_2.get_shape()[1].value * pool_2.get_shape()[2].value * pool_2.get_shape()[3].value 
@@ -71,8 +73,8 @@ def cnn(images):
     h_fc1 = tf.nn.relu(tf.matmul(pool_2_flat, W_fc1) + b_fc1)
 	
     #Softmax
-    W_fc2 = tf.Variable(tf.truncated_normal([dim, NUM_CLASSES], stddev=1.0/np.sqrt(dim)), name='weights_3')
-    b_fc2 = tf.Variable(tf.zeros([NUM_CLASSES]), name='biases_3')
+    W_fc2 = tf.Variable(tf.truncated_normal([300, NUM_CLASSES], stddev=1.0/np.sqrt(300)), name='weights_fc2')
+    b_fc2 = tf.Variable(tf.zeros([NUM_CLASSES]), name='biases_fc2')
     logits = tf.matmul(h_fc1, W_fc2) + b_fc2
 
     return logits
@@ -111,27 +113,38 @@ def main():
         sess.run(tf.global_variables_initializer())
 
         test_acc = []
+        training_loss =[]
         for e in range(epochs):
             np.random.shuffle(idx)
             trainX, trainY = trainX[idx], trainY[idx]
 
             for start, end in zip(range(0, N, batch_size), range(batch_size, N, batch_size)):
-                train_step.run(feed_dict={x: trainX[start:end], y_: trainY[start:end], keep_prob: 0.5})
+                train_step.run(feed_dict={x: trainX[start:end], y_: trainY[start:end]})
+                training_loss.append(loss.eval(feed_dict={x: trainX, y_: trainY}))
                 #_, loss_ = sess.run([train_step, loss], {x: trainX, y_: trainY})
 
-            test_acc.append(accuracy.eval(feed_dict={x: testX, y_: testY, keep_prob: 1.0}))
-            print('epoch', e, 'entropy', loss_)
+            test_acc.append(accuracy.eval(feed_dict={x: testX, y_: testY}))
+            print('epoch', e, 'entropy', training_loss[-1], 'test accuracy', test_acc[-1])
 
 
     ind = np.random.randint(low=0, high=10000)
     X = trainX[ind,:]
     
-    plt.figure()
-    plt.gray()
-    X_show = X.reshape(NUM_CHANNELS, IMG_SIZE, IMG_SIZE).transpose(1, 2, 0)
-    plt.axis('off')
-    plt.imshow(X_show)
-    plt.savefig('./p1b_2.png')
+    # plt.figure()
+    # plt.gray()
+    # X_show = X.reshape(NUM_CHANNELS, IMG_SIZE, IMG_SIZE).transpose(1, 2, 0)
+    # plt.axis('off')
+    # plt.imshow(X_show)
+    # plt.savefig('./p1b_2.png')
+
+    plt.figure(1)
+    for test_acc in final_test_acc:
+        plt.plot(range(epochs), test_acc)
+    for train_err in final_train_err:
+        plt.plot(range(epochs), train_err)
+    plt.xlabel('Number of iterations')
+    plt.show()
+    plt.savefig('./A1.png')
 
 
 if __name__ == '__main__':
