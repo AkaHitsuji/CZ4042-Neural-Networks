@@ -156,6 +156,9 @@ def main():
 
     plt.show()
 
+    h_conv1_, h_pool1_, h_conv2_, h_pool2_ = sess.run([c1, p1, c2, p2],
+                                                  {x: X.reshape(1,1024)})
+
     print(c1)
     print(c2)
     print(p1)
