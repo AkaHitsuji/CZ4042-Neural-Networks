@@ -1,7 +1,17 @@
 #
 # Chapter 1, Example 2
 #
+print("importingg os")
+import os
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]="1,2"
 
+print("device lib")
+from tensorflow.python.client import device_lib
+print("printing")
+print(device_lib.list_local_devices())
+
+print("importingg tf")
 import numpy as np
 import tensorflow as tf
 
@@ -9,7 +19,7 @@ w1 = tf.Variable([1.0, 1.0], tf.float32) # trainable parameters
 b1 = tf.Variable(1.0, tf.float32)
 w2 = tf.Variable([1.0, 2.0], tf.float32) # trainable parameters
 b2 = tf.Variable(-1.0, tf.float32)
-w3 = tf.Variable([-1.0, 1.0], tf.float32) # trainable parameters
+w3 = tf.Variable([-1.0, 1.0], tf.float32) # trainasble parameters
 b3 = tf.Variable(2.0, tf.float32)
 w = tf.Variable([1.0, -1.0, 1.0], tf.float32) # trainable parameters
 b = tf.Variable(-1.5, tf.float32)
