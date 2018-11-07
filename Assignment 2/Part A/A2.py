@@ -95,8 +95,8 @@ def main():
     max_test_acc = 0
     max_map1 = 0
     max_map2 = 0
-    for map1 in range(5,100,5):
-        for map2 in range(5,100,5):
+    for map1 in range(5,101,5):
+        for map2 in range(5,101,5):
             print("Training with", map1, "feature maps at conv1 and ", map2,"feature maps at conv2")
             # Create the model
             x = tf.placeholder(tf.float32, [None, IMG_SIZE*IMG_SIZE*NUM_CHANNELS])
@@ -128,12 +128,12 @@ def main():
                         train_step.run(feed_dict={x: trainX[start:end], y_: trainY[start:end]})
             
                 acc = accuracy.eval(feed_dict={x: testX, y_: testY})
-                print('Test Accuracy for', map1, 'and', map2, 'is', acc)    
+                print('Test Accuracy for', map1, 'and', map2, 'is', acc)
                 if (acc > max_test_acc):
                     max_test_acc = acc
                     max_map1 = map1
                     max_map2 = map2
-    print('Best test accuracy after search is', map1, 'and', map2, 'with accuracy', acc)   
+                print('Best test accuracy after search is', max_map1, 'and', max_map2, 'with accuracy', max_test_acc)   
 
 
 
