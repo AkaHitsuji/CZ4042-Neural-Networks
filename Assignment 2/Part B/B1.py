@@ -5,7 +5,7 @@ import csv
 import matplotlib.pyplot as plt
 from datetime import datetime
 
-is_testing = True
+is_testing = False
 
 MAX_DOCUMENT_LENGTH = 100
 N_FILTERS = 10
