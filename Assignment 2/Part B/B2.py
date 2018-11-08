@@ -156,6 +156,10 @@ def main(with_dropout=False):
         np.random.shuffle(index)
         x_train, y_train = x_train[index], y_train[index]
 
+        # mini batch learning
+        for start, end in zip(range(0, N, batch_size), range(batch_size, N, batch_size)):
+                train_op.run(feed_dict={x: x_train[start:end], y_: y_train[start:end]})
+
         _, loss_  = sess.run([train_op, entropy], {x: x_train, y_: y_train})
         test_acc_ = accuracy.eval(feed_dict={x:x_test, y_: y_test})
 
@@ -168,16 +172,19 @@ def main(with_dropout=False):
   sess.close()
 
   # plot graph
+  if with_dropout:
+      title = 'Accuracy/Loss of Word CNN Classifier with Dropout'
+      filename = 'graphs/B5-word-cnn-with-dropout'+str(datetime.now())+'.png'
+  else:
+      title = 'Accuracy/Loss of Word CNN Classifier'
+      filename = 'graphs/B2-word-cnn-'+str(datetime.now())+'.png'
+
   plt.plot(range(len(loss)), loss, label='trng_loss')
   plt.plot(range(len(test_accuracy)), test_accuracy, label='test_acc')
   plt.legend()
-  plt.title('Accuracy/Loss')
+  plt.title(title)
   plt.xlabel('Epochs')
   plt.ylabel('Accuracy/Loss')
-  if with_dropout:
-      filename = 'graphs/B5-word-cnn-with-dropout'+str(datetime.now())+'.png'
-  else:
-      filename = 'graphs/B2-word-cnn-'+str(datetime.now())+'.png'
   plt.savefig(filename.replace(' ','-').replace(':','.'))
   plt.close()
 

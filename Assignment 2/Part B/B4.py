@@ -94,7 +94,7 @@ def data_read_words():
 
   return x_train, y_train, x_test, y_test, no_words
 
-def main(with_dropout=False,cell_type='gru',num_layers=1):
+def main(with_dropout=False,cell_type='gru',num_layers=1,gradient_clipping=False):
   global n_words
   tf.reset_default_graph()
 
@@ -117,7 +117,15 @@ def main(with_dropout=False,cell_type='gru',num_layers=1):
 
   # Optimizer
   entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(labels=tf.one_hot(y_, MAX_LABEL), logits=logits))
-  train_op = tf.train.AdamOptimizer(lr).minimize(entropy)
+
+  if gradient_clipping:
+      optimizer = tf.train.AdamOptimizer(learning_rate=lr)
+      gvs = optimizer.compute_gradients(entropy)
+      capped_gvs = [(tf.clip_by_value(grad, -2., 2.), var) for grad, var in gvs]
+      train_op = optimizer.apply_gradients(capped_gvs)
+
+  else:
+      train_op = tf.train.AdamOptimizer(lr).minimize(entropy)
 
   # Accuracy
   correct_prediction = tf.cast(tf.equal(tf.argmax(logits, 1), y_), tf.float32)
@@ -139,6 +147,10 @@ def main(with_dropout=False,cell_type='gru',num_layers=1):
         np.random.shuffle(index)
         x_train, y_train = x_train[index], y_train[index]
 
+        # mini batch learning
+        for start, end in zip(range(0, N, batch_size), range(batch_size, N, batch_size)):
+                train_op.run(feed_dict={x: x_train[start:end], y_: y_train[start:end]})
+
         _, loss_  = sess.run([train_op, entropy], {x: x_train, y_: y_train})
         test_acc_ = accuracy.eval(feed_dict={x:x_test, y_: y_test})
 
@@ -151,20 +163,31 @@ def main(with_dropout=False,cell_type='gru',num_layers=1):
   sess.close()
 
   # plot graph
+  if with_dropout:
+      title = 'Accuracy/Loss of Word RNN Classifier with Dropout'
+      filename = 'graphs/B5-word-rnn-with-dropout'+str(datetime.now())+'.png'
+  elif cell_type == 'lstm':
+      title = 'Accuracy/Loss of Word RNN Classifier using LSTM'
+      filename = 'graphs/B6a-word-rnn-lstm'+str(datetime.now())+'.png'
+  elif cell_type == 'rnn':
+      title = 'Accuracy/Loss of Word RNN Classifier using Vanilla RNN'
+      filename = 'graphs/B6a-word-rnn-v_rnn'+str(datetime.now())+'.png'
+  elif num_layers > 1:
+      title = 'Accuracy/Loss of Word RNN Classifier with multiple layers'
+      filename = 'graphs/B6b-word-rnn-2_layers'+str(datetime.now())+'.png'
+  elif gradient_clipping:
+      title = 'Accuracy/Loss of Word RNN Classifier with Gradient Clipping'
+      filename = 'graphs/B6c-word-rnn-grad_clipping'+str(datetime.now())+'.png'
+  else:
+      title = 'Accuracy/Loss of Word RNN Classifier'
+      filename = 'graphs/B4-word-rnn-'+str(datetime.now())+'.png'
+
   plt.plot(range(len(loss)), loss, label='trng_loss')
   plt.plot(range(len(test_accuracy)), test_accuracy, label='test_acc')
   plt.legend()
-  plt.title('Accuracy/Loss')
+  plt.title(title)
   plt.xlabel('Epochs')
   plt.ylabel('Accuracy/Loss')
-  if with_dropout:
-      filename = 'graphs/B5-word-rnn-with-dropout'+str(datetime.now())+'.png'
-  elif cell_type == 'lstm':
-      filename = 'graphs/B6a-word-rnn-lstm'+str(datetime.now())+'.png'
-  elif cell_type == 'rnn':
-      filename = 'graphs/B6a-word-rnn-v_rnn'+str(datetime.now())+'.png'
-  else:
-      filename = 'graphs/B4-word-rnn-'+str(datetime.now())+'.png'
   plt.savefig(filename.replace(' ','-').replace(':','.'))
   plt.close()
 

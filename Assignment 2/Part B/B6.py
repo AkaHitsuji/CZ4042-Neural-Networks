@@ -34,19 +34,21 @@ def main():
     print('\n===== Running B4 with 2 rnn layers =====')
     B4.main(num_layers=2)
     print('B4 with 2 layers completed')
-    #
-    # # B3 gradient clipping
-    # print('\n===== Running B3 with gradient clipping =====')
-    # tf.reset_default_graph()
-    #
-    # print('B3 with gradient clipping completed')
-    #
-    # # B4 gradient clipping
-    # print('\n===== Running B4 with gradient clipping =====')
-    # tf.reset_default_graph()
-    #
-    # print('B4 with gradient clipping completed')
 
+    print('\n\nrunning with gradient clipping...')
+    # B3 gradient clipping
+    print('\n===== Running B3 with gradient clipping =====')
+    tf.reset_default_graph()
+    B3.main(gradient_clipping=True)
+    print('B3 with gradient clipping completed')
+
+    # B4 gradient clipping
+    print('\n===== Running B4 with gradient clipping =====')
+    tf.reset_default_graph()
+    B4.main(gradient_clipping=True)
+    print('B4 with gradient clipping completed')
+
+    print('all parts completed and graphs generated')
 
 
 
