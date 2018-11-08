@@ -107,7 +107,7 @@ def main():
     cross_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_, logits=logits)
     loss = tf.reduce_mean(cross_entropy)
 
-    train_step = tf.train.MomentumOptimizer(learning_rate,0.1).minimize(loss)
+    train_step = tf.train.AdamOptimizer(learning_rate).minimize(loss)
 
     correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1))
     correct_prediction = tf.cast(correct_prediction, tf.float32)
