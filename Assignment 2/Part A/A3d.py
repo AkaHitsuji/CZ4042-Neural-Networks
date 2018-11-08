@@ -138,13 +138,13 @@ def main():
         plt.plot(range(epochs), test_acc)
         plt.ylabel('Test Accuracy')
         plt.xlabel('Number of iterations')
-        plt.savefig('./A1-Test_accuracy.png')
+        plt.savefig('./A3d-Test_accuracy.png')
 
         plt.figure(2)
         plt.plot(range(epochs), training_loss)
         plt.xlabel('Number of iterations')
         plt.ylabel('Training Loss')
-        plt.savefig('./A1-Training_loss.png')
+        plt.savefig('./A3d-Training_loss.png')
  
         plt.show()
 

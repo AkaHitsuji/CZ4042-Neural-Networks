@@ -16,8 +16,6 @@ NUM_CHANNELS = 3
 learning_rate = 0.001
 epochs = 100
 batch_size = 128
-FEATURE_MAP_1 = 95
-FEATURE_MAP_2 = 95
 
 
 seed = 10
@@ -46,25 +44,25 @@ def load_data(file):
 
 
 
-def cnn(images):
+def cnn(images,maps1,maps2):
 
     images = tf.reshape(images, [-1, IMG_SIZE, IMG_SIZE, NUM_CHANNELS])
     
-    #Conv 1 - maps one RGB image (3x32x32) to 50 feature maps (50x24x24), pool to (50x12x12)
-    W1 = tf.Variable(tf.truncated_normal([9, 9, NUM_CHANNELS, FEATURE_MAP_1], stddev=1.0/np.sqrt(NUM_CHANNELS*9*9)), name='weights_1')
-    b1 = tf.Variable(tf.zeros([FEATURE_MAP_1]), name='biases_1')
+    #Conv 1 - maps one RGB image (3x32x32) to maps1 feature maps (maps1x24x24), pool to (50x12x12)
+    W1 = tf.Variable(tf.truncated_normal([9, 9, NUM_CHANNELS, maps1], stddev=1.0/np.sqrt(NUM_CHANNELS*9*9)), name='weights_1')
+    b1 = tf.Variable(tf.zeros([maps1]), name='biases_1')
     conv_1 = tf.nn.relu(tf.nn.conv2d(images, W1, [1, 1, 1, 1], padding='VALID') + b1)
     pool_1 = tf.nn.max_pool(conv_1, ksize= [1, 2, 2, 1], strides= [1, 2, 2, 1], padding='VALID', name='pool_1')
 
 	#Conv 2 -- maps 50 feature maps (50x12x12) to 60 (60x8x8), pool to (60x4x4)
-    W2 = tf.Variable(tf.truncated_normal([5, 5, FEATURE_MAP_1, FEATURE_MAP_2], stddev=1.0/np.sqrt(FEATURE_MAP_1*5*5)), name='weights_2')
-    b2 = tf.Variable(tf.zeros([FEATURE_MAP_2]), name='biases_1')
+    W2 = tf.Variable(tf.truncated_normal([5, 5, maps1, maps2], stddev=1.0/np.sqrt(maps1*5*5)), name='weights_2')
+    b2 = tf.Variable(tf.zeros([maps2]), name='biases_1')
     conv_2 = tf.nn.relu(tf.nn.conv2d(pool_1, W2, [1, 1, 1, 1], padding='VALID') + b2)
     pool_2 = tf.nn.max_pool(conv_2, ksize= [1, 2, 2, 1], strides= [1, 2, 2, 1], padding='VALID', name='pool_2')
 
     # Fully connected layer 1 -- after 2 round of downsampling, our 32x32 image
     # is down to 60x4x4 feature maps -- maps this to 300 features
-    W_fc1 = tf.Variable(tf.truncated_normal([4*4*FEATURE_MAP_2,300], stddev=1.0/np.sqrt(4*4*FEATURE_MAP_2)), name='weights_fc1')
+    W_fc1 = tf.Variable(tf.truncated_normal([4*4*maps2,300], stddev=1.0/np.sqrt(4*4*maps2)), name='weights_fc1')
     b_fc1 = tf.Variable(tf.zeros([300]), name='biases_fc1')
     # W_fc1 = weight_variable([4 * 4 * 60, 300])
     # b_fc1 = bias_variable([300])
@@ -94,55 +92,50 @@ def main():
     testX = (testX - np.min(trainX, axis = 0))/np.max(trainX, axis = 0)
     trainX = (trainX - np.min(trainX, axis = 0))/np.max(trainX, axis = 0)
 
-    # Create the model
-    x = tf.placeholder(tf.float32, [None, IMG_SIZE*IMG_SIZE*NUM_CHANNELS])
-    y_ = tf.placeholder(tf.float32, [None, NUM_CLASSES])
+    max_test_acc = 0
+    max_map1 = 0
+    max_map2 = 0
+    for map1 in range(95,101,5):
+        for map2 in range(95,101,5):
+            print("Training with", map1, "feature maps at conv1 and ", map2,"feature maps at conv2")
+            # Create the model
+            x = tf.placeholder(tf.float32, [None, IMG_SIZE*IMG_SIZE*NUM_CHANNELS])
+            y_ = tf.placeholder(tf.float32, [None, NUM_CLASSES])
 
-    c1,p1,c2,p2,logits = cnn(x)
+            c1,p1,c2,p2,logits = cnn(x,map1,map2)
 
-    cross_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_, logits=logits)
-    loss = tf.reduce_mean(cross_entropy)
+            cross_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_, logits=logits)
+            loss = tf.reduce_mean(cross_entropy)
 
-    train_step = tf.train.RMSPropOptimizer(learning_rate,0.1).minimize(loss)
+            train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss)
 
-    correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1))
-    correct_prediction = tf.cast(correct_prediction, tf.float32)
-    accuracy = tf.reduce_mean(correct_prediction)
+            correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1))
+            correct_prediction = tf.cast(correct_prediction, tf.float32)
+            accuracy = tf.reduce_mean(correct_prediction)
 
-    N = len(trainX)
-    idx = np.arange(N)
-    with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
+            N = len(trainX)
+            idx = np.arange(N)
+            with tf.Session() as sess:
+                sess.run(tf.global_variables_initializer())
 
-        test_acc = []
-        training_loss =[]
-        for e in range(epochs):
-            np.random.shuffle(idx)
-            trainX, trainY = trainX[idx], trainY[idx]
+                test_acc = []
+                training_loss =[]
+                for e in range(epochs):
+                    np.random.shuffle(idx)
+                    trainX, trainY = trainX[idx], trainY[idx]
 
-            for start, end in zip(range(0, N, batch_size), range(batch_size, N, batch_size)):
-                train_step.run(feed_dict={x: trainX[start:end], y_: trainY[start:end]})
+                    for start, end in zip(range(0, N, batch_size), range(batch_size, N, batch_size)):
+                        train_step.run(feed_dict={x: trainX[start:end], y_: trainY[start:end]})
             
-            training_loss.append(loss.eval(feed_dict={x: trainX, y_: trainY}))
-            test_acc.append(accuracy.eval(feed_dict={x: testX, y_: testY}))
-                #_, loss_ = sess.run([train_step, loss], {x: trainX, y_: trainY})
+                acc = accuracy.eval(feed_dict={x: testX, y_: testY})
+                print('Test Accuracy for', map1, 'and', map2, 'is', acc)
+                if (acc > max_test_acc):
+                    max_test_acc = acc
+                    max_map1 = map1
+                    max_map2 = map2
+                print('Best test accuracy after search is', max_map1, 'and', max_map2, 'with accuracy', max_test_acc)   
 
-            
-            print('epoch', e, 'entropy', training_loss[e], 'test accuracy', test_acc[e])
 
-        plt.figure(1)
-        plt.plot(range(epochs), test_acc)
-        plt.ylabel('Test Accuracy')
-        plt.xlabel('Number of iterations')
-        plt.savefig('./A3b-Test_accuracy.png')
-
-        plt.figure(2)
-        plt.plot(range(epochs), training_loss)
-        plt.xlabel('Number of iterations')
-        plt.ylabel('Training Loss')
-        plt.savefig('./A3b-Training_loss.png')
- 
-        plt.show()
 
 
 
