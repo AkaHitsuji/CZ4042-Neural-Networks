@@ -16,6 +16,8 @@ NUM_CHANNELS = 3
 learning_rate = 0.001
 epochs = 100
 batch_size = 128
+FEATURE_MAP_1 = 95
+FEATURE_MAP_2 = 95
 
 
 seed = 10
@@ -49,20 +51,20 @@ def cnn(images):
     images = tf.reshape(images, [-1, IMG_SIZE, IMG_SIZE, NUM_CHANNELS])
     
     #Conv 1 - maps one RGB image (3x32x32) to 50 feature maps (50x24x24), pool to (50x12x12)
-    W1 = tf.Variable(tf.truncated_normal([9, 9, NUM_CHANNELS, 50], stddev=1.0/np.sqrt(NUM_CHANNELS*9*9)), name='weights_1')
-    b1 = tf.Variable(tf.zeros([50]), name='biases_1')
+    W1 = tf.Variable(tf.truncated_normal([9, 9, NUM_CHANNELS, FEATURE_MAP_1], stddev=1.0/np.sqrt(NUM_CHANNELS*9*9)), name='weights_1')
+    b1 = tf.Variable(tf.zeros([FEATURE_MAP_1]), name='biases_1')
     conv_1 = tf.nn.relu(tf.nn.conv2d(images, W1, [1, 1, 1, 1], padding='VALID') + b1)
     pool_1 = tf.nn.max_pool(conv_1, ksize= [1, 2, 2, 1], strides= [1, 2, 2, 1], padding='VALID', name='pool_1')
 
 	#Conv 2 -- maps 50 feature maps (50x12x12) to 60 (60x8x8), pool to (60x4x4)
-    W2 = tf.Variable(tf.truncated_normal([5, 5, 50, 60], stddev=1.0/np.sqrt(50*5*5)), name='weights_2')
-    b2 = tf.Variable(tf.zeros([60]), name='biases_1')
+    W2 = tf.Variable(tf.truncated_normal([5, 5, FEATURE_MAP_1, FEATURE_MAP_2], stddev=1.0/np.sqrt(FEATURE_MAP_1*5*5)), name='weights_2')
+    b2 = tf.Variable(tf.zeros([FEATURE_MAP_2]), name='biases_1')
     conv_2 = tf.nn.relu(tf.nn.conv2d(pool_1, W2, [1, 1, 1, 1], padding='VALID') + b2)
     pool_2 = tf.nn.max_pool(conv_2, ksize= [1, 2, 2, 1], strides= [1, 2, 2, 1], padding='VALID', name='pool_2')
 
     # Fully connected layer 1 -- after 2 round of downsampling, our 32x32 image
     # is down to 60x4x4 feature maps -- maps this to 300 features
-    W_fc1 = tf.Variable(tf.truncated_normal([4*4*60,300], stddev=1.0/np.sqrt(4*4*60)), name='weights_fc1')
+    W_fc1 = tf.Variable(tf.truncated_normal([4*4*FEATURE_MAP_2,300], stddev=1.0/np.sqrt(4*4*FEATURE_MAP_2)), name='weights_fc1')
     b_fc1 = tf.Variable(tf.zeros([300]), name='biases_fc1')
     # W_fc1 = weight_variable([4 * 4 * 60, 300])
     # b_fc1 = bias_variable([300])
@@ -101,7 +103,7 @@ def main():
     cross_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_, logits=logits)
     loss = tf.reduce_mean(cross_entropy)
 
-    train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss)
+    train_step = tf.train.MomentumOptimizer(learning_rate,0.1).minimize(loss)
 
     correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y_, 1))
     correct_prediction = tf.cast(correct_prediction, tf.float32)
@@ -127,88 +129,21 @@ def main():
 
             
             print('epoch', e, 'entropy', training_loss[e], 'test accuracy', test_acc[e])
-        test1 = testX[0,:]
-        test2 = testX[1,:]
 
         plt.figure(1)
         plt.plot(range(epochs), test_acc)
         plt.ylabel('Test Accuracy')
         plt.xlabel('Number of iterations')
-        plt.savefig('./A1-Test_accuracy.png')
+        plt.savefig('./A3a-Test_accuracy.png')
 
         plt.figure(2)
         plt.plot(range(epochs), training_loss)
         plt.xlabel('Number of iterations')
         plt.ylabel('Training Loss')
-        plt.savefig('./A1-Training_loss.png')
+        plt.savefig('./A3a-Training_loss.png')
  
         plt.show()
 
-        h_conv1_, h_pool1_, h_conv2_, h_pool2_ = sess.run([c1, p1, c2, p2],{x: test1.reshape(1,3072)})
-
-        plt.figure(3)
-        X_show = test1.reshape(NUM_CHANNELS, IMG_SIZE, IMG_SIZE).transpose(1,2,0)
-        plt.imshow(X_show)
-        plt.savefig('./A1-test1-original.png')
-        
-        plt.figure(4)
-        plt.gray()
-        for i in range(50):
-            plt.subplot(10, 5, i+1); plt.axis('off'); plt.imshow(h_conv1_[0,:,:,i])
-        plt.savefig('./A1-test1-c1.png')
-
-        plt.figure(5)
-        plt.gray()
-        for i in range(50):
-            plt.subplot(10, 5, i+1); plt.axis('off'); plt.imshow(h_pool1_[0,:,:,i])
-        plt.savefig('./A1-test1-p1.png')
-
-        plt.figure(6)
-        plt.gray()
-        for i in range(60):
-            plt.subplot(10, 6, i+1); plt.axis('off'); plt.imshow(h_conv2_[0,:,:,i])
-        plt.savefig('./A1-test1-c2.png')
-
-        plt.figure(7)
-        plt.gray()
-        for i in range(60):
-            plt.subplot(10, 6, i+1); plt.axis('off'); plt.imshow(h_pool2_[0,:,:,i])
-        plt.savefig('./A1-test1-p2.png')
-
-        plt.show()
-
-        h_conv1_, h_pool1_, h_conv2_, h_pool2_ = sess.run([c1, p1, c2, p2],{x: test2.reshape(1,3072)})
-
-        plt.figure(8)
-        X_show = test2.reshape(NUM_CHANNELS, IMG_SIZE, IMG_SIZE).transpose(1,2,0)
-        plt.imshow(X_show)
-        plt.savefig('./A1-test2-original.png')
-        
-        plt.figure(9)
-        plt.gray()
-        for i in range(50):
-            plt.subplot(10, 5, i+1); plt.axis('off'); plt.imshow(h_conv1_[0,:,:,i])
-        plt.savefig('./A1-test2-c1.png')
-
-        plt.figure(10)
-        plt.gray()
-        for i in range(50):
-            plt.subplot(10, 5, i+1); plt.axis('off'); plt.imshow(h_pool1_[0,:,:,i])
-        plt.savefig('./A1-test2-p1.png')
-
-        plt.figure(11)
-        plt.gray()
-        for i in range(60):
-            plt.subplot(10, 6, i+1); plt.axis('off'); plt.imshow(h_conv2_[0,:,:,i])
-        plt.savefig('./A1-test2-c2.png')
-
-        plt.figure(12)
-        plt.gray()
-        for i in range(60):
-            plt.subplot(10, 6, i+1); plt.axis('off'); plt.imshow(h_pool2_[0,:,:,i])
-        plt.savefig('./A1-test2-p2.png')
-
-        plt.show()
 
 
 if __name__ == '__main__':
