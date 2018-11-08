@@ -5,7 +5,7 @@ import csv
 import matplotlib.pyplot as plt
 from datetime import datetime
 
-is_testing = True
+is_testing = False
 
 MAX_DOCUMENT_LENGTH = 100
 NUM_FILTERS = 10
@@ -167,9 +167,8 @@ def main():
   plt.title('Accuracy/Loss')
   plt.xlabel('Epochs')
   plt.ylabel('Accuracy/Loss')
-
-  plt.savefig('graphs/2b2-word-cnn-'+str(datetime.now())
-+'.png')
+  filename = './graphs/2b2-word-cnn-'+str(datetime.now())+'.png'
+  plt.savefig(filename.replace(' ','-').replace(':','.'))
   plt.close()
 
 if __name__ == '__main__':

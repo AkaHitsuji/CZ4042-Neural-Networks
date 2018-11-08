@@ -156,7 +156,7 @@ def main():
   plt.title('Accuracy/Loss')
   plt.xlabel('Epochs')
   plt.ylabel('Accuracy/Loss')
-  filename = 'graphs/2b1-char-cnn-'+str(datetime.now())+'.png'
+  filename = './graphs/2b1-char-cnn-'+str(datetime.now())+'.png'
   plt.savefig(filename.replace(' ','-').replace(':','.'))
   plt.close()
 
