@@ -8,14 +8,8 @@ from datetime import datetime
 is_testing = False
 
 MAX_DOCUMENT_LENGTH = 100
-NUM_FILTERS = 10
-FILTER_SHAPE1 = [20,20]
-FILTER_SHAPE2 = [20,1]
-POOLING_WINDOW = 4
-POOLING_STRIDE = 2
 HIDDEN_SIZE = 20
 MAX_LABEL = 15
-EMBEDDING_SIZE = 20
 
 if is_testing:
     no_epochs = 5
@@ -29,86 +23,52 @@ tf.logging.set_verbosity(tf.logging.ERROR)
 seed = 10
 tf.set_random_seed(seed)
 
-def word_cnn_model(x):
+def char_rnn_model(x):
 
-  word_vectors = tf.contrib.layers.embed_sequence(
-      x, vocab_size=n_words, embed_dim=EMBEDDING_SIZE)
+  char_vectors = tf.one_hot(x, 256)
 
-  input_layer = tf.reshape(
-      word_vectors, [-1, MAX_DOCUMENT_LENGTH, EMBEDDING_SIZE, 1])
+  char_list = tf.unstack(char_vectors, axis=1)
 
-  with tf.variable_scope('CNN_Layer'):
-    conv1 = tf.layers.conv2d(
-        input_layer,
-        filters=NUM_FILTERS,
-        kernel_size=FILTER_SHAPE1,
-        padding='VALID',
-        activation=tf.nn.relu)
-    pool1 = tf.layers.max_pooling2d(
-        conv1,
-        pool_size=POOLING_WINDOW,
-        strides=POOLING_STRIDE,
-        padding='SAME')
+  cell = tf.nn.rnn_cell.GRUCell(HIDDEN_SIZE)
+  _, encoding = tf.nn.static_rnn(cell, char_list, dtype=tf.float32)
 
-    conv2 = tf.layers.conv2d(
-        pool1,
-        filters=NUM_FILTERS,
-        kernel_size=FILTER_SHAPE2,
-        padding='VALID',
-        activation=tf.nn.relu)
-    pool2 = tf.layers.max_pooling2d(
-        conv2,
-        pool_size=POOLING_WINDOW,
-        strides=POOLING_STRIDE,
-        padding='SAME')
+  logits = tf.layers.dense(encoding, MAX_LABEL, activation=None)
 
-    pool2 = tf.squeeze(tf.reduce_max(pool2, 1), squeeze_dims=[1])
+  return logits, char_list
 
-  logits = tf.layers.dense(pool2, MAX_LABEL, activation=None)
-
-  return input_layer, logits
-
-def data_read_words():
+def read_data_chars():
 
   x_train, y_train, x_test, y_test = [], [], [], []
 
   with open('train_medium.csv', encoding='utf-8') as filex:
     reader = csv.reader(filex)
     for row in reader:
-      x_train.append(row[2])
+      x_train.append(row[1])
       y_train.append(int(row[0]))
 
-  with open("test_medium.csv", encoding='utf-8') as filex:
+  with open('test_medium.csv', encoding='utf-8') as filex:
     reader = csv.reader(filex)
     for row in reader:
-      x_test.append(row[2])
+      x_test.append(row[1])
       y_test.append(int(row[0]))
 
   x_train = pandas.Series(x_train)
   y_train = pandas.Series(y_train)
   x_test = pandas.Series(x_test)
   y_test = pandas.Series(y_test)
+
+
+  char_processor = tf.contrib.learn.preprocessing.ByteProcessor(MAX_DOCUMENT_LENGTH)
+  x_train = np.array(list(char_processor.fit_transform(x_train)))
+  x_test = np.array(list(char_processor.transform(x_test)))
   y_train = y_train.values
   y_test = y_test.values
 
-  vocab_processor = tf.contrib.learn.preprocessing.VocabularyProcessor(
-      MAX_DOCUMENT_LENGTH)
-
-  x_transform_train = vocab_processor.fit_transform(x_train)
-  x_transform_test = vocab_processor.transform(x_test)
-
-  x_train = np.array(list(x_transform_train))
-  x_test = np.array(list(x_transform_test))
-
-  no_words = len(vocab_processor.vocabulary_)
-  print('Total words: %d' % no_words)
-
-  return x_train, y_train, x_test, y_test, no_words
+  return x_train, y_train, x_test, y_test
 
 def main():
-  global n_words
 
-  x_train, y_train, x_test, y_test, n_words = data_read_words()
+  x_train, y_train, x_test, y_test = read_data_chars()
 
   if is_testing:
     x_train = x_train[:500]
@@ -123,7 +83,7 @@ def main():
   x = tf.placeholder(tf.int64, [None, MAX_DOCUMENT_LENGTH])
   y_ = tf.placeholder(tf.int64)
 
-  inputs, logits = word_cnn_model(x)
+  logits, char_list = char_rnn_model(x)
 
   # Optimizer
   entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(labels=tf.one_hot(y_, MAX_LABEL), logits=logits))
@@ -133,8 +93,8 @@ def main():
   correct_prediction = tf.cast(tf.equal(tf.argmax(logits, 1), y_), tf.float32)
   accuracy = tf.reduce_mean(correct_prediction)
 
-  sess = tf.Session()
-  sess.run(tf.global_variables_initializer())
+  # sess = tf.Session()
+  # sess.run(tf.global_variables_initializer())
 
   # training
   loss = []
@@ -167,7 +127,7 @@ def main():
   plt.title('Accuracy/Loss')
   plt.xlabel('Epochs')
   plt.ylabel('Accuracy/Loss')
-  filename = './graphs/2b2-word-cnn-'+str(datetime.now())+'.png'
+  filename = 'graphs/2b3-char-rnn-'+str(datetime.now())+'.png'
   plt.savefig(filename.replace(' ','-').replace(':','.'))
   plt.close()
 

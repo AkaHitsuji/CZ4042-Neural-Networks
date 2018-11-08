@@ -18,7 +18,7 @@ MAX_LABEL = 15
 if is_testing:
     no_epochs = 5
 else:
-    no_epochs = 100
+    no_epochs = 1000
 
 lr = 0.01
 batch_size = 128
