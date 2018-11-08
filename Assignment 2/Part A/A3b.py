@@ -16,8 +16,8 @@ NUM_CHANNELS = 3
 learning_rate = 0.001
 epochs = 100
 batch_size = 128
-FEATURE_MAP_1 = 50
-FEATURE_MAP_2 = 60
+FEATURE_MAP_1 = 95
+FEATURE_MAP_2 = 95
 
 
 seed = 10

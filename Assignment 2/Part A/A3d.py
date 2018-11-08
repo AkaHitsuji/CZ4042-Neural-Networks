@@ -16,8 +16,9 @@ NUM_CHANNELS = 3
 learning_rate = 0.001
 epochs = 100
 batch_size = 128
-FEATURE_MAP_1 = 50
-FEATURE_MAP_2 = 60
+FEATURE_MAP_1 = 95
+FEATURE_MAP_2 = 95
+DROPOUT = 0.9
 
 
 seed = 10
@@ -54,12 +55,14 @@ def cnn(images):
     W1 = tf.Variable(tf.truncated_normal([9, 9, NUM_CHANNELS, FEATURE_MAP_1], stddev=1.0/np.sqrt(NUM_CHANNELS*9*9)), name='weights_1')
     b1 = tf.Variable(tf.zeros([FEATURE_MAP_1]), name='biases_1')
     conv_1 = tf.nn.relu(tf.nn.conv2d(images, W1, [1, 1, 1, 1], padding='VALID') + b1)
+    conv_1 = tf.nn.dropout(conv_1, DROPOUT)
     pool_1 = tf.nn.max_pool(conv_1, ksize= [1, 2, 2, 1], strides= [1, 2, 2, 1], padding='VALID', name='pool_1')
 
 	#Conv 2 -- maps 50 feature maps (50x12x12) to 60 (60x8x8), pool to (60x4x4)
     W2 = tf.Variable(tf.truncated_normal([5, 5, FEATURE_MAP_1, FEATURE_MAP_2], stddev=1.0/np.sqrt(FEATURE_MAP_1*5*5)), name='weights_2')
     b2 = tf.Variable(tf.zeros([FEATURE_MAP_2]), name='biases_1')
     conv_2 = tf.nn.relu(tf.nn.conv2d(pool_1, W2, [1, 1, 1, 1], padding='VALID') + b2)
+    conv_2 = tf.nn.dropout(conv_2, DROPOUT)
     pool_2 = tf.nn.max_pool(conv_2, ksize= [1, 2, 2, 1], strides= [1, 2, 2, 1], padding='VALID', name='pool_2')
 
     # Fully connected layer 1 -- after 2 round of downsampling, our 32x32 image
@@ -73,6 +76,7 @@ def cnn(images):
     dim = pool_2.get_shape()[1].value * pool_2.get_shape()[2].value * pool_2.get_shape()[3].value 
     pool_2_flat = tf.reshape(pool_2, [-1, dim])
     h_fc1 = tf.nn.relu(tf.matmul(pool_2_flat, W_fc1) + b_fc1)
+    h_fc1 = tf.nn.dropout(h_fc1, DROPOUT)
 	
     #Softmax
     W_fc2 = tf.Variable(tf.truncated_normal([300, NUM_CLASSES], stddev=1.0/np.sqrt(300)), name='weights_fc2')
