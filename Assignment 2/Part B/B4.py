@@ -25,17 +25,33 @@ tf.logging.set_verbosity(tf.logging.ERROR)
 seed = 10
 tf.set_random_seed(seed)
 
-def word_rnn_model(x,with_dropout):
+def word_rnn_model(x,with_dropout,cell_type='gru',num_layers=1):
   word_vectors = tf.contrib.layers.embed_sequence(
       x, vocab_size=n_words, embed_dim=EMBEDDING_SIZE)
   word_list = tf.unstack(word_vectors, axis=1)
 
-  cell = tf.nn.rnn_cell.GRUCell(HIDDEN_SIZE)
+  def create_cell(cell_type):
+      if cell_type == 'gru':
+          cell = tf.nn.rnn_cell.GRUCell(HIDDEN_SIZE)
+      elif cell_type == 'rnn':
+          cell = tf.nn.rnn_cell.BasicRNNCell(HIDDEN_SIZE)
+      elif cell_type == 'lstm':
+          cell = tf.nn.rnn_cell.LSTMCell(HIDDEN_SIZE)
+      return cell
+
+  if num_layers>1:
+      cell = tf.contrib.rnn.MultiRNNCell([create_cell(cell_type) for _ in range(num_layers)])
+  else:
+      cell = create_cell(cell_type)
 
   if with_dropout:
       cell = tf.contrib.rnn.DropoutWrapper(cell,input_keep_prob=dropout, output_keep_prob=dropout)
 
   _, encoding = tf.nn.static_rnn(cell, word_list, dtype=tf.float32)
+
+  # encoding is a tuple (c,h), however dense layer only expects one input, h, therefore we only return h
+  if isinstance(encoding, tf.nn.rnn_cell.LSTMStateTuple) or isinstance(encoding, tuple):
+            encoding = encoding[-1]
 
   logits = tf.layers.dense(encoding, MAX_LABEL, activation=None)
 
@@ -78,7 +94,7 @@ def data_read_words():
 
   return x_train, y_train, x_test, y_test, no_words
 
-def main(with_dropout=False):
+def main(with_dropout=False,cell_type='gru',num_layers=1):
   global n_words
   tf.reset_default_graph()
 
@@ -97,7 +113,7 @@ def main(with_dropout=False):
   x = tf.placeholder(tf.int64, [None, MAX_DOCUMENT_LENGTH])
   y_ = tf.placeholder(tf.int64)
 
-  logits, word_list = word_rnn_model(x,with_dropout)
+  logits, word_list = word_rnn_model(x,with_dropout,cell_type,num_layers)
 
   # Optimizer
   entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(labels=tf.one_hot(y_, MAX_LABEL), logits=logits))
@@ -142,7 +158,11 @@ def main(with_dropout=False):
   plt.xlabel('Epochs')
   plt.ylabel('Accuracy/Loss')
   if with_dropout:
-      filename = 'graphs/B4-word-rnn-with-dropout'+str(datetime.now())+'.png'
+      filename = 'graphs/B5-word-rnn-with-dropout'+str(datetime.now())+'.png'
+  elif cell_type == 'lstm':
+      filename = 'graphs/B6a-word-rnn-lstm'+str(datetime.now())+'.png'
+  elif cell_type == 'rnn':
+      filename = 'graphs/B6a-word-rnn-v_rnn'+str(datetime.now())+'.png'
   else:
       filename = 'graphs/B4-word-rnn-'+str(datetime.now())+'.png'
   plt.savefig(filename.replace(' ','-').replace(':','.'))

@@ -165,7 +165,7 @@ def main(with_dropout=False):
   plt.xlabel('Epochs')
   plt.ylabel('Accuracy/Loss')
   if with_dropout:
-      filename = 'graphs/B1-char-cnn-with-dropout'+str(datetime.now())+'.png'
+      filename = 'graphs/B5-char-cnn-with-dropout'+str(datetime.now())+'.png'
   else:
       filename = 'graphs/B1-char-cnn-'+str(datetime.now())+'.png'
   plt.savefig(filename.replace(' ','-').replace(':','.'))
