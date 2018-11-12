@@ -14,10 +14,10 @@ NUM_CLASSES = 10
 IMG_SIZE = 32
 NUM_CHANNELS = 3
 learning_rate = 0.001
-epochs = 100
+epochs = 1000
 batch_size = 128
-FEATURE_MAP_1 = 95
-FEATURE_MAP_2 = 95
+FEATURE_MAP_1 = 90
+FEATURE_MAP_2 = 100
 
 
 seed = 10
@@ -100,7 +100,7 @@ def main():
 
     c1,p1,c2,p2,logits = cnn(x)
 
-    cross_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_, logits=logits)
+    cross_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_, logits=logits)*1000000
     loss = tf.reduce_mean(cross_entropy)
 
     train_step = tf.train.AdamOptimizer(learning_rate).minimize(loss)
@@ -122,7 +122,7 @@ def main():
 
             for start, end in zip(range(0, N, batch_size), range(batch_size, N, batch_size)):
                 train_step.run(feed_dict={x: trainX[start:end], y_: trainY[start:end]})
-            
+            print(loss.eval(feed_dict={x: trainX, y_: trainY}))
             training_loss.append(loss.eval(feed_dict={x: trainX, y_: trainY}))
             test_acc.append(accuracy.eval(feed_dict={x: testX, y_: testY}))
                 #_, loss_ = sess.run([train_step, loss], {x: trainX, y_: trainY})
@@ -142,7 +142,7 @@ def main():
         plt.ylabel('Training Loss')
         plt.savefig('./A3c-Training_loss.png')
  
-        plt.show()
+        #plt.show()
 
 
 

@@ -14,10 +14,10 @@ NUM_CLASSES = 10
 IMG_SIZE = 32
 NUM_CHANNELS = 3
 learning_rate = 0.001
-epochs = 100
+epochs = 1000
 batch_size = 128
-FEATURE_MAP_1 = 95
-FEATURE_MAP_2 = 95
+FEATURE_MAP_1 = 90
+FEATURE_MAP_2 = 100
 DROPOUT = 0.9
 
 
@@ -146,7 +146,7 @@ def main():
         plt.ylabel('Training Loss')
         plt.savefig('./A3d-Training_loss.png')
  
-        plt.show()
+        #plt.show()
 
 
 
