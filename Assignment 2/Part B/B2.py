@@ -3,7 +3,8 @@ import pandas
 import tensorflow as tf
 import csv
 import matplotlib.pyplot as plt
-from datetime import datetime
+import datetime
+import time
 
 is_testing = False
 
@@ -150,6 +151,10 @@ def main(with_dropout=False):
   # shuffle data
   N = len(x_train)
   index = np.arange(N)
+
+  # start timer
+  timer = time.time()
+
   with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
     for e in range(no_epochs):
@@ -171,18 +176,24 @@ def main(with_dropout=False):
 
   sess.close()
 
+  # time taken for graph
+  elapsed_time = (time.time() - timer)
+  elapsed_time_str = 'Elapsed time: ' + str(datetime.timedelta(seconds=elapsed_time)).split(".")[0]
+
   # plot graph
   if with_dropout:
       title = 'Accuracy/Loss of Word CNN Classifier with Dropout'
-      filename = 'graphs/B5-word-cnn-with-dropout'+str(datetime.now())+'.png'
+      filename = 'graphs/B5-word-cnn-with-dropout'+str(datetime.datetime.now())+'.png'
   else:
       title = 'Accuracy/Loss of Word CNN Classifier'
-      filename = 'graphs/B2-word-cnn-'+str(datetime.now())+'.png'
+      filename = 'graphs/B2-word-cnn-'+str(datetime.datetime.now())+'.png'
 
   plt.plot(range(len(loss)), loss, label='trng_loss')
   plt.plot(range(len(test_accuracy)), test_accuracy, label='test_acc')
   plt.legend()
-  plt.title(title)
+  plt.suptitle(title)
+  subtitle_str = elapsed_time_str + '   Max Test Accuracy: ' + str(max(test_accuracy))
+  plt.title(subtitle_str, fontsize=9)
   plt.xlabel('Epochs')
   plt.ylabel('Accuracy/Loss')
   plt.savefig(filename.replace(' ','-').replace(':','.'))

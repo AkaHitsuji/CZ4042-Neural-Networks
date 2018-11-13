@@ -3,7 +3,8 @@ import pandas
 import tensorflow as tf
 import csv
 import matplotlib.pyplot as plt
-from datetime import datetime
+import datetime
+import time
 
 is_testing = False
 
@@ -131,9 +132,6 @@ def main(with_dropout=False,cell_type='gru',num_layers=1,gradient_clipping=False
   correct_prediction = tf.cast(tf.equal(tf.argmax(logits, 1), y_), tf.float32)
   accuracy = tf.reduce_mean(correct_prediction)
 
-  # sess = tf.Session()
-  # sess.run(tf.global_variables_initializer())
-
   # training
   loss = []
   test_accuracy = []
@@ -141,6 +139,10 @@ def main(with_dropout=False,cell_type='gru',num_layers=1,gradient_clipping=False
   # shuffle data
   N = len(x_train)
   index = np.arange(N)
+
+  # start timer
+  timer = time.time()
+
   with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
     for e in range(no_epochs):
@@ -162,30 +164,36 @@ def main(with_dropout=False,cell_type='gru',num_layers=1,gradient_clipping=False
 
   sess.close()
 
+  # time taken for graph
+  elapsed_time = (time.time() - timer)
+  elapsed_time_str = 'Elapsed time: ' + str(datetime.timedelta(seconds=elapsed_time)).split(".")[0]
+
   # plot graph
   if with_dropout:
       title = 'Accuracy/Loss of Word RNN Classifier with Dropout'
-      filename = 'graphs/B5-word-rnn-with-dropout'+str(datetime.now())+'.png'
+      filename = 'graphs/B5-word-rnn-with-dropout'+str(datetime.datetime.now())+'.png'
   elif cell_type == 'lstm':
       title = 'Accuracy/Loss of Word RNN Classifier using LSTM'
-      filename = 'graphs/B6a-word-rnn-lstm'+str(datetime.now())+'.png'
+      filename = 'graphs/B6a-word-rnn-lstm'+str(datetime.datetime.now())+'.png'
   elif cell_type == 'rnn':
       title = 'Accuracy/Loss of Word RNN Classifier using Vanilla RNN'
-      filename = 'graphs/B6a-word-rnn-v_rnn'+str(datetime.now())+'.png'
+      filename = 'graphs/B6a-word-rnn-v_rnn'+str(datetime.datetime.now())+'.png'
   elif num_layers > 1:
       title = 'Accuracy/Loss of Word RNN Classifier with multiple layers'
-      filename = 'graphs/B6b-word-rnn-2_layers'+str(datetime.now())+'.png'
+      filename = 'graphs/B6b-word-rnn-2_layers'+str(datetime.datetime.now())+'.png'
   elif gradient_clipping:
       title = 'Accuracy/Loss of Word RNN Classifier with Gradient Clipping'
-      filename = 'graphs/B6c-word-rnn-grad_clipping'+str(datetime.now())+'.png'
+      filename = 'graphs/B6c-word-rnn-grad_clipping'+str(datetime.datetime.now())+'.png'
   else:
       title = 'Accuracy/Loss of Word RNN Classifier'
-      filename = 'graphs/B4-word-rnn-'+str(datetime.now())+'.png'
+      filename = 'graphs/B4-word-rnn-'+str(datetime.datetime.now())+'.png'
 
   plt.plot(range(len(loss)), loss, label='trng_loss')
   plt.plot(range(len(test_accuracy)), test_accuracy, label='test_acc')
   plt.legend()
-  plt.title(title)
+  plt.suptitle(title)
+  subtitle_str = elapsed_time_str + '   Max Test Accuracy: ' + str(max(test_accuracy))
+  plt.title(subtitle_str, fontsize=9)
   plt.xlabel('Epochs')
   plt.ylabel('Accuracy/Loss')
   plt.savefig(filename.replace(' ','-').replace(':','.'))
