@@ -100,7 +100,7 @@ def main():
 
     c1,p1,c2,p2,logits = cnn(x)
 
-    cross_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_, logits=logits)*1000000
+    cross_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(labels=y_, logits=logits)
     loss = tf.reduce_mean(cross_entropy)
 
     train_step = tf.train.AdamOptimizer(learning_rate).minimize(loss)
