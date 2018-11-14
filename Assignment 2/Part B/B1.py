@@ -3,7 +3,8 @@ import pandas
 import tensorflow as tf
 import csv
 import matplotlib.pyplot as plt
-from datetime import datetime
+import datetime
+import time
 
 is_testing = False
 
@@ -18,16 +19,18 @@ MAX_LABEL = 15
 if is_testing:
     no_epochs = 5
 else:
-    no_epochs = 1000
+    no_epochs = 100
+print('nooo of epochs: ',no_epochs)
 
 lr = 0.01
 batch_size = 128
+dropout = 0.9
 
 tf.logging.set_verbosity(tf.logging.ERROR)
 seed = 10
 tf.set_random_seed(seed)
 
-def char_cnn_model(x):
+def char_cnn_model(x, with_dropout=False):
 
   input_layer = tf.reshape(
       tf.one_hot(x, 256), [-1, MAX_DOCUMENT_LENGTH, 256, 1])
@@ -45,6 +48,9 @@ def char_cnn_model(x):
         strides=POOLING_STRIDE,
         padding='SAME')
 
+    if with_dropout:
+        pool1 = tf.nn.dropout(pool1, dropout)
+
     conv2 = tf.layers.conv2d(
         pool1,
         filters=N_FILTERS,
@@ -56,6 +62,9 @@ def char_cnn_model(x):
         pool_size=POOLING_WINDOW,
         strides=POOLING_STRIDE,
         padding='SAME')
+
+    if with_dropout:
+        pool2 = tf.nn.dropout(pool2, dropout)
 
     pool2 = tf.squeeze(tf.reduce_max(pool2, 1), squeeze_dims=[1])
 
@@ -95,7 +104,7 @@ def read_data_chars():
   return x_train, y_train, x_test, y_test
 
 
-def main():
+def main(with_dropout=False):
 
   x_train, y_train, x_test, y_test = read_data_chars()
 
@@ -112,7 +121,7 @@ def main():
   x = tf.placeholder(tf.int64, [None, MAX_DOCUMENT_LENGTH])
   y_ = tf.placeholder(tf.int64)
 
-  inputs, logits = char_cnn_model(x)
+  inputs, logits = char_cnn_model(x, with_dropout)
 
   # Optimizer
   entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(labels=tf.one_hot(y_, MAX_LABEL), logits=logits))
@@ -122,9 +131,6 @@ def main():
   correct_prediction = tf.cast(tf.equal(tf.argmax(logits, 1), y_), tf.float32)
   accuracy = tf.reduce_mean(correct_prediction)
 
-  # sess = tf.Session()
-  # sess.run(tf.global_variables_initializer())
-
   # training
   loss = []
   test_accuracy = []
@@ -132,11 +138,20 @@ def main():
   # shuffle data
   N = len(x_train)
   index = np.arange(N)
+
+  # start timer
+  timer = time.time()
+
   with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
+    print('no of epochs:',no_epochs)
     for e in range(no_epochs):
         np.random.shuffle(index)
         x_train, y_train = x_train[index], y_train[index]
+
+        # mini batch learning
+        for start, end in zip(range(0, N, batch_size), range(batch_size, N, batch_size)):
+                train_op.run(feed_dict={x: x_train[start:end], y_: y_train[start:end]})
 
         _, loss_  = sess.run([train_op, entropy], {x: x_train, y_: y_train})
         test_acc_ = accuracy.eval(feed_dict={x:x_test, y_: y_test})
@@ -149,14 +164,26 @@ def main():
 
   sess.close()
 
+  # time taken for graph
+  elapsed_time = (time.time() - timer)
+  elapsed_time_str = 'Elapsed time: ' + str(datetime.timedelta(seconds=elapsed_time)).split(".")[0]
+
   # plot graph
+  if with_dropout:
+      title = 'Accuracy/Loss of Char CNN Classifier with Dropout'
+      filename = 'graphs/B5-char-cnn-with-dropout'+str(datetime.datetime.now())+'.png'
+  else:
+      title = 'Accuracy/Loss of Char CNN Classifier'
+      filename = 'graphs/B1-char-cnn-'+str(datetime.datetime.now())+'.png'
+
   plt.plot(range(len(loss)), loss, label='trng_loss')
   plt.plot(range(len(test_accuracy)), test_accuracy, label='test_acc')
   plt.legend()
-  plt.title('Accuracy/Loss')
+  plt.suptitle(title)
+  subtitle_str = elapsed_time_str + '   Max Test Accuracy: ' + str(max(test_accuracy))
+  plt.title(subtitle_str, fontsize=9)
   plt.xlabel('Epochs')
   plt.ylabel('Accuracy/Loss')
-  filename = 'graphs/2b1-char-cnn-'+str(datetime.now())+'.png'
   plt.savefig(filename.replace(' ','-').replace(':','.'))
   plt.close()
 

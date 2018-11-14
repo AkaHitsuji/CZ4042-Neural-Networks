@@ -3,7 +3,8 @@ import pandas
 import tensorflow as tf
 import csv
 import matplotlib.pyplot as plt
-from datetime import datetime
+import datetime
+import time
 
 is_testing = False
 
@@ -20,16 +21,19 @@ EMBEDDING_SIZE = 20
 if is_testing:
     no_epochs = 5
 else:
-    no_epochs = 1000
+    no_epochs = 100
+print('no of epochs: ',no_epochs)
+
 
 lr = 0.01
 batch_size = 128
+dropout = 0.9
 
 tf.logging.set_verbosity(tf.logging.ERROR)
 seed = 10
 tf.set_random_seed(seed)
 
-def word_cnn_model(x):
+def word_cnn_model(x, with_dropout=False):
 
   word_vectors = tf.contrib.layers.embed_sequence(
       x, vocab_size=n_words, embed_dim=EMBEDDING_SIZE)
@@ -50,6 +54,9 @@ def word_cnn_model(x):
         strides=POOLING_STRIDE,
         padding='SAME')
 
+    if with_dropout:
+        pool1 = tf.nn.dropout(pool1,dropout)
+
     conv2 = tf.layers.conv2d(
         pool1,
         filters=NUM_FILTERS,
@@ -61,6 +68,9 @@ def word_cnn_model(x):
         pool_size=POOLING_WINDOW,
         strides=POOLING_STRIDE,
         padding='SAME')
+
+    if with_dropout:
+        pool2 = tf.nn.dropout(pool2,dropout)
 
     pool2 = tf.squeeze(tf.reduce_max(pool2, 1), squeeze_dims=[1])
 
@@ -105,7 +115,7 @@ def data_read_words():
 
   return x_train, y_train, x_test, y_test, no_words
 
-def main():
+def main(with_dropout=False):
   global n_words
 
   x_train, y_train, x_test, y_test, n_words = data_read_words()
@@ -123,7 +133,7 @@ def main():
   x = tf.placeholder(tf.int64, [None, MAX_DOCUMENT_LENGTH])
   y_ = tf.placeholder(tf.int64)
 
-  inputs, logits = word_cnn_model(x)
+  inputs, logits = word_cnn_model(x,with_dropout)
 
   # Optimizer
   entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(labels=tf.one_hot(y_, MAX_LABEL), logits=logits))
@@ -143,11 +153,19 @@ def main():
   # shuffle data
   N = len(x_train)
   index = np.arange(N)
+
+  # start timer
+  timer = time.time()
+
   with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
     for e in range(no_epochs):
         np.random.shuffle(index)
         x_train, y_train = x_train[index], y_train[index]
+
+        # mini batch learning
+        for start, end in zip(range(0, N, batch_size), range(batch_size, N, batch_size)):
+                train_op.run(feed_dict={x: x_train[start:end], y_: y_train[start:end]})
 
         _, loss_  = sess.run([train_op, entropy], {x: x_train, y_: y_train})
         test_acc_ = accuracy.eval(feed_dict={x:x_test, y_: y_test})
@@ -160,14 +178,26 @@ def main():
 
   sess.close()
 
+  # time taken for graph
+  elapsed_time = (time.time() - timer)
+  elapsed_time_str = 'Elapsed time: ' + str(datetime.timedelta(seconds=elapsed_time)).split(".")[0]
+
   # plot graph
+  if with_dropout:
+      title = 'Accuracy/Loss of Word CNN Classifier with Dropout'
+      filename = 'graphs/B5-word-cnn-with-dropout'+str(datetime.datetime.now())+'.png'
+  else:
+      title = 'Accuracy/Loss of Word CNN Classifier'
+      filename = 'graphs/B2-word-cnn-'+str(datetime.datetime.now())+'.png'
+
   plt.plot(range(len(loss)), loss, label='trng_loss')
   plt.plot(range(len(test_accuracy)), test_accuracy, label='test_acc')
   plt.legend()
-  plt.title('Accuracy/Loss')
+  plt.suptitle(title)
+  subtitle_str = elapsed_time_str + '   Max Test Accuracy: ' + str(max(test_accuracy))
+  plt.title(subtitle_str, fontsize=9)
   plt.xlabel('Epochs')
   plt.ylabel('Accuracy/Loss')
-  filename = 'graphs/2b1-word-cnn-'+str(datetime.now())+'.png'
   plt.savefig(filename.replace(' ','-').replace(':','.'))
   plt.close()
 
