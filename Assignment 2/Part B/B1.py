@@ -19,12 +19,12 @@ MAX_LABEL = 15
 if is_testing:
     no_epochs = 5
 else:
-    no_epochs = 1000
+    no_epochs = 100
+print('nooo of epochs: ',no_epochs)
 
 lr = 0.01
 batch_size = 128
 dropout = 0.9
-
 
 tf.logging.set_verbosity(tf.logging.ERROR)
 seed = 10
@@ -144,6 +144,7 @@ def main(with_dropout=False):
 
   with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
+    print('no of epochs:',no_epochs)
     for e in range(no_epochs):
         np.random.shuffle(index)
         x_train, y_train = x_train[index], y_train[index]

@@ -16,7 +16,7 @@ EMBEDDING_SIZE = 20
 if is_testing:
     no_epochs = 5
 else:
-    no_epochs = 1000
+    no_epochs = 100
 
 lr = 0.01
 batch_size = 128
@@ -65,13 +65,13 @@ def data_read_words():
   with open('train_medium.csv', encoding='utf-8') as filex:
     reader = csv.reader(filex)
     for row in reader:
-      x_train.append(row[1])
+      x_train.append(row[2])
       y_train.append(int(row[0]))
 
   with open("test_medium.csv", encoding='utf-8') as filex:
     reader = csv.reader(filex)
     for row in reader:
-      x_test.append(row[1])
+      x_test.append(row[2])
       y_test.append(int(row[0]))
 
   x_train = pandas.Series(x_train)
