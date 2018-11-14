@@ -14,10 +14,10 @@ NUM_CLASSES = 10
 IMG_SIZE = 32
 NUM_CHANNELS = 3
 learning_rate = 0.001
-epochs = 100
+epochs = 1000
 batch_size = 128
-FEATURE_MAP_1 = 50
-FEATURE_MAP_2 = 60
+FEATURE_MAP_1 = 90
+FEATURE_MAP_2 = 100
 
 
 seed = 10
@@ -134,15 +134,15 @@ def main():
         plt.plot(range(epochs), test_acc)
         plt.ylabel('Test Accuracy')
         plt.xlabel('Number of iterations')
-        plt.savefig('./A1-Test_accuracy.png')
+        plt.savefig('./A3b-Test_accuracy.png')
 
         plt.figure(2)
         plt.plot(range(epochs), training_loss)
         plt.xlabel('Number of iterations')
         plt.ylabel('Training Loss')
-        plt.savefig('./A1-Training_loss.png')
+        plt.savefig('./A3b-Training_loss.png')
  
-        plt.show()
+        #plt.show()
 
 
 

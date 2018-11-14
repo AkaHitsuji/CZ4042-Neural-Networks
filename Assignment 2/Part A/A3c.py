@@ -14,10 +14,10 @@ NUM_CLASSES = 10
 IMG_SIZE = 32
 NUM_CHANNELS = 3
 learning_rate = 0.001
-epochs = 100
+epochs = 1000
 batch_size = 128
-FEATURE_MAP_1 = 50
-FEATURE_MAP_2 = 60
+FEATURE_MAP_1 = 90
+FEATURE_MAP_2 = 100
 
 
 seed = 10
@@ -122,7 +122,7 @@ def main():
 
             for start, end in zip(range(0, N, batch_size), range(batch_size, N, batch_size)):
                 train_step.run(feed_dict={x: trainX[start:end], y_: trainY[start:end]})
-            
+            print(loss.eval(feed_dict={x: trainX, y_: trainY}))
             training_loss.append(loss.eval(feed_dict={x: trainX, y_: trainY}))
             test_acc.append(accuracy.eval(feed_dict={x: testX, y_: testY}))
                 #_, loss_ = sess.run([train_step, loss], {x: trainX, y_: trainY})
@@ -134,15 +134,15 @@ def main():
         plt.plot(range(epochs), test_acc)
         plt.ylabel('Test Accuracy')
         plt.xlabel('Number of iterations')
-        plt.savefig('./A1-Test_accuracy.png')
+        plt.savefig('./A3c-Test_accuracy.png')
 
         plt.figure(2)
         plt.plot(range(epochs), training_loss)
         plt.xlabel('Number of iterations')
         plt.ylabel('Training Loss')
-        plt.savefig('./A1-Training_loss.png')
+        plt.savefig('./A3c-Training_loss.png')
  
-        plt.show()
+        #plt.show()
 
 
 

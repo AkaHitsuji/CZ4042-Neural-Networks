@@ -14,7 +14,7 @@ NUM_CLASSES = 10
 IMG_SIZE = 32
 NUM_CHANNELS = 3
 learning_rate = 0.001
-epochs = 100
+epochs = 1000
 batch_size = 128
 
 
@@ -142,7 +142,7 @@ def main():
         plt.ylabel('Training Loss')
         plt.savefig('./A1-Training_loss.png')
  
-        plt.show()
+        #plt.show()
 
         h_conv1_, h_pool1_, h_conv2_, h_pool2_ = sess.run([c1, p1, c2, p2],{x: test1.reshape(1,3072)})
 
@@ -175,7 +175,7 @@ def main():
             plt.subplot(10, 6, i+1); plt.axis('off'); plt.imshow(h_pool2_[0,:,:,i])
         plt.savefig('./A1-test1-p2.png')
 
-        plt.show()
+        #plt.show()
 
         h_conv1_, h_pool1_, h_conv2_, h_pool2_ = sess.run([c1, p1, c2, p2],{x: test2.reshape(1,3072)})
 
@@ -208,7 +208,7 @@ def main():
             plt.subplot(10, 6, i+1); plt.axis('off'); plt.imshow(h_pool2_[0,:,:,i])
         plt.savefig('./A1-test2-p2.png')
 
-        plt.show()
+        #plt.show()
 
 
 if __name__ == '__main__':

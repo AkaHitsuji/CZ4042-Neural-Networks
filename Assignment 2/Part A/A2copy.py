@@ -95,9 +95,8 @@ def main():
     max_test_acc = 0
     max_map1 = 0
     max_map2 = 0
-    test_acc = np.array([])
-    for map1 in range(5,101,5):
-        for map2 in range(5,101,5):
+    for map1 in range(95,101,5):
+        for map2 in range(95,101,5):
             print("Training with", map1, "feature maps at conv1 and ", map2,"feature maps at conv2")
             # Create the model
             x = tf.placeholder(tf.float32, [None, IMG_SIZE*IMG_SIZE*NUM_CHANNELS])
@@ -116,10 +115,11 @@ def main():
 
             N = len(trainX)
             idx = np.arange(N)
-            
             with tf.Session() as sess:
                 sess.run(tf.global_variables_initializer())
 
+                test_acc = []
+                training_loss =[]
                 for e in range(epochs):
                     np.random.shuffle(idx)
                     trainX, trainY = trainX[idx], trainY[idx]
@@ -129,27 +129,12 @@ def main():
             
                 acc = accuracy.eval(feed_dict={x: testX, y_: testY})
                 print('Test Accuracy for', map1, 'and', map2, 'is', acc)
-                test_acc = np.append(test_acc,acc)
                 if (acc > max_test_acc):
                     max_test_acc = acc
                     max_map1 = map1
                     max_map2 = map2
                 print('Best test accuracy after search is', max_map1, 'and', max_map2, 'with accuracy', max_test_acc)   
-    from mpl_toolkits import mplot3d
-    x = range(5,101,5)
-    y = range(5,101,5)
-    X,Y = np.meshgrid(x,y)
-    test_acc = test_acc.reshape((20,20))
-    print(test_acc)
-    plt.figure()
-    ax = plt.axes(projection = '3d')
-    ax.plot_surface(X, Y, acc, rstride=1, cstride=1,
-                cmap='viridis', edgecolor='none')
-    ax.set_title('surface');
-    ax.set_xlabel('Convolutional layer 2')
-    ax.set_ylabel('Convolutional layer 1')
-    ax.set_zlabel('Test accuracy');
-    plt.savefig('A2-test-accuracy')
+
 
 
 
